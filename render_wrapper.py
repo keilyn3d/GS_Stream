@@ -100,6 +100,7 @@ class GS_Model():
 if __name__ == '__main__':
     model1 = GS_Model(
         config_path="/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/config.yaml")
+
     R_mat = np.array([[-0.70811329, -0.21124761, 0.67375813],
                       [0.16577646, 0.87778949, 0.4494483],
                       [-0.68636268, 0.42995355, -0.58655453]])
