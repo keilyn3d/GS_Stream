@@ -52,7 +52,7 @@ class DummyCamera:
         return pose
 
 
-class GS_Model():
+class GSModel:
     def __init__(self,
                  ply_path="/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/point_cloud.ply",
                  device="cuda:0", images_txt=None):
@@ -96,7 +96,7 @@ class GS_Model():
 
 
 if __name__ == '__main__':
-    model1 = GS_Model(
+    model1 = GSModel(
         ply_path="/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/point_cloud.ply")
     R_mat = np.array([[-0.70811329, -0.21124761, 0.67375813],
                       [0.16577646, 0.87778949, 0.4494483],
@@ -109,5 +109,4 @@ if __name__ == '__main__':
     cam = DummyCamera(R=R_mat, T=T_vec, W=1600, H=1200, FoVx=1.4261863218, FoVy=1.150908963)
     print(cam.world_view_transform)
 
-    model1.get_closest_imgs(cam.world_view_transform)
     #model1.render_view(cam=cam, save=True, out_path="test_roty_90_dev.jpg")
