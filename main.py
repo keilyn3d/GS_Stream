@@ -4,7 +4,7 @@ Imports for Web-Viewer
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_socketio import join_room, leave_room, send, SocketIO
 
-from render_wrapper import DummyCamera, GSModel
+from render_wrapper import DummyCamera, GS_Model
 
 """
 Import to load GS_Model from render_wrapper.py
@@ -86,10 +86,29 @@ def viewer():
     return render_template("viewer.html")
 
 
+@socketio.on("nnImgClick")
+def nn_img_click(idx):
+    """
+    When user clicks on one of the closest images...
+    Load a higher resolution image and send it to the viewport
+    """
+    code = session.get("code")
+    name = session.get("name")
+    pose = session.get("pose")
+    pose = np.array(pose)
+
+    idx = int(idx["idx"])
+    print(str(idx))
+
 @socketio.on('key_control')
 def key_control(data):
     """
     key_control listens for button presses from the client...
+
+    If key pressed is " " (spacebar) then...
+    1. get the closest images and send them to the client
+
+    If key pressed is qweasduiojkl then...
     1. then calculates a new pose
     2. get new view using gaussian splatting
     3. emit the image to the server
@@ -113,18 +132,18 @@ def key_control(data):
         model = model_1
 
     """
-    If the user presses space-bar
+    When the user presses space-bar refresh the closest images...
     """
     if key["key"] == " ":
         filenames = model.images.get_closest_n(pose=pose, n=3)
         print("The closest images are: " + ', '.join(str(x) for x in filenames))
-        #TODO: Remove hardcoded filepath standardize on colmap
+        # TODO: Remove hardcoded filepath standardize on colmap
         filepath = "/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/images"
         for counter, file in enumerate(filenames):
             with open(os.path.join(filepath, "smalls", file), 'rb') as f:
                 img_data = f.read()
             # Emit the image to topic img1
-            socketio.emit("nnImg_"+str(counter+1), {'image': img_data})
+            socketio.emit("nnImg_" + str(counter + 1), {'image': img_data})
 
     """
     SIBR Viewer Controls

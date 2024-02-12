@@ -127,6 +127,20 @@ socket.on('nnImg_3', function(msg){
 
 });
 
+// nnImg_X Click Handler
+nnImg1Canvas.addEventListener("click", function() {
+    console.log("nnImg_1, was clicked");
+    socket.emit("nnImgClick", {idx: 1})
+})
+nnImg2Canvas.addEventListener("click", function() {
+    console.log("nnImg_2, was clicked")
+    socket.emit("nnImgClick", {idx: 2})
+})
+nnImg3Canvas.addEventListener("click", function() {
+    console.log("nnImg_3, was clicked")
+    socket.emit("nnImgClick", {idx: 3})
+})
+
 // FPS limit
 let lastKeyPressedTime = 0;
 window.addEventListener("keypress", keyEventHandler, false);
