@@ -134,7 +134,7 @@ def key_control(data):
     """
     When the user presses space-bar refresh the closest images...
     """
-    if key["key"] == " ":
+    if key == " ":
         filenames = model.images.get_closest_n(pose=pose, n=3)
         print("The closest images are: " + ', '.join(str(x) for x in filenames))
         # TODO: Remove hardcoded filepath standardize on colmap

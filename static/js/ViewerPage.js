@@ -85,6 +85,7 @@ stepValue.addEventListener('input', function() {
     } else {
         message.textContent = 'Value must be between 1 and 10.';
     }
+})
 
     // Listens for nnImg_1
 socket.on('nnImg_1', function(msg){
@@ -163,6 +164,6 @@ function keyEventHandler(event){
 // Pose Reset
 const reset = document.getElementById('reset');
 reset.addEventListener('click', function() {
-    console.log("pose_reset");
-    socket.emit("pose_reset");
-});
+    console.log("pose_reset")
+    socket.emit("pose_reset")
+})
