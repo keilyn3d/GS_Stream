@@ -138,12 +138,12 @@ def key_control(data):
         filenames = model.images.get_closest_n(pose=pose, n=3)
         print("The closest images are: " + ', '.join(str(x) for x in filenames))
         # TODO: Remove hardcoded filepath standardize on colmap
-        filepath = "/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/images"
+        filepath = "/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/reconstruction/images/"
         for counter, file in enumerate(filenames):
             with open(os.path.join(filepath, "smalls", file), 'rb') as f:
                 img_data = f.read()
             # Emit the image to topic img1
-            socketio.emit("nnImg_" + str(counter + 1), {'image': img_data})
+            socketio.emit("nnImg_" + str(counter + 1), {'image': img_data, 'filename': file})
 
     """
     SIBR Viewer Controls
