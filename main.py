@@ -135,12 +135,12 @@ def key_control(key):
         filenames = model.images.get_closest_n(pose=pose, n=3)
         print("The closest images are: " + ', '.join(str(x) for x in filenames))
         # TODO: Remove hardcoded filepath standardize on colmap
-        filepath = "/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/images"
+        filepath = "/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/reconstruction/images/"
         for counter, file in enumerate(filenames):
             with open(os.path.join(filepath, "smalls", file), 'rb') as f:
                 img_data = f.read()
             # Emit the image to topic img1
-            socketio.emit("nnImg_" + str(counter + 1), {'image': img_data})
+            socketio.emit("nnImg_" + str(counter + 1), {'image': img_data, 'filename': file})
 
     """
     SIBR Viewer Controls
@@ -263,8 +263,7 @@ if __name__ == '__main__':
                          '/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/point_cloud.ply')
 
     #TODO: Let's do this... images.txt is in the images directory...
-    images_txt_path = os.getenv('GS_IMG_PATH',
-                                '/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/sparse/0/images.txt')
+    images_txt_path = os.getenv('GS_IMG_PATH', '/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/sparse/0/images.txt')
     host = os.getenv('GS_HOST', '127.0.0.1')
     debug = os.getenv('GS_DEBUG', 'false').lower() == 'true'
     model_1 = GSModel(ply_path=ply_path, images_txt=images_txt_path)

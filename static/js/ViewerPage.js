@@ -15,14 +15,19 @@ const img1 = new Image()
 const nnImg1Canvas = document.getElementById('nnImg_1');
 const nnImg1Ctx = nnImg1Canvas.getContext('2d');
 const nnImg1 = new Image()
+let nnImg1Name = ""
 
 const nnImg2Canvas = document.getElementById('nnImg_2');
 const nnImg2Ctx = nnImg2Canvas.getContext('2d');
 const nnImg2 = new Image()
+let nnImg2Name = ""
+
 
 const nnImg3Canvas = document.getElementById('nnImg_3');
 const nnImg3Ctx = nnImg3Canvas.getContext('2d');
 const nnImg3 = new Image()
+let nnImg3Name = ""
+
 
 // Depreciated drawButton
 const drawButton = document.getElementById('drawButton');
@@ -48,7 +53,7 @@ socket.on('img1', function(msg) {
 socket.on('nnImg_1', function(msg){
         console.log("Update 1st Nearest img!")
         let arrayBufferView = new Uint8Array(msg['image']);
-        console.log(arrayBufferView);
+        nnImg1Name = msg['filename'];
 
         var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
         var nnimg1_url = URL.createObjectURL(blob);
@@ -63,7 +68,7 @@ socket.on('nnImg_1', function(msg){
 socket.on('nnImg_2', function(msg){
         console.log("Update 2nd Nearest img!")
         let arrayBufferView = new Uint8Array(msg['image']);
-        console.log(arrayBufferView);
+        nnImg2Name = msg['filename'];
 
         var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
         var nnimg2_url = URL.createObjectURL(blob);
@@ -78,7 +83,7 @@ socket.on('nnImg_2', function(msg){
 socket.on('nnImg_3', function(msg){
         console.log("Update 3rd Nearest img!")
         let arrayBufferView = new Uint8Array(msg['image']);
-        console.log(arrayBufferView);
+        nnImg3Name = msg['filename'];
 
         var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
         var nnimg3_url = URL.createObjectURL(blob);
@@ -92,15 +97,15 @@ socket.on('nnImg_3', function(msg){
 // nnImg_X Click Handler
 nnImg1Canvas.addEventListener("click", function() {
     console.log("nnImg_1, was clicked");
-    socket.emit("nnImgClick", {idx: 1})
+    socket.emit("nnImgClick", {idx: 1, filename: nnImg1Name})
 })
 nnImg2Canvas.addEventListener("click", function() {
     console.log("nnImg_2, was clicked")
-    socket.emit("nnImgClick", {idx: 2})
+    socket.emit("nnImgClick", {idx: 2, filename: nnImg2Name})
 })
 nnImg3Canvas.addEventListener("click", function() {
     console.log("nnImg_3, was clicked")
-    socket.emit("nnImgClick", {idx: 3})
+    socket.emit("nnImgClick", {idx: 3, filename: nnImg3Name})
 })
 
 // FPS limit
