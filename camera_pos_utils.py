@@ -50,7 +50,7 @@ class ImagesMeta:
 
     def get_pose_by_filename(self, filename):
         idx = self.files.index(filename)
-        return Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix(), self.t_vec[idx]
+        return compose_44(Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix(), self.t_vec[idx])
 
 
 def compose_44(r, t):

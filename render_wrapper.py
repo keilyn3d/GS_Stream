@@ -63,6 +63,7 @@ class GS_Model():
 
         if config["images_txt_path"] is not None:
             self.images = ImagesMeta(config["images_txt_path"])
+            self.images_files = config["images_files"]
             self.images_thumbnails = config["images_files_thumbnails"]
 
         self.world2custom = np.array(config["world2custom"])

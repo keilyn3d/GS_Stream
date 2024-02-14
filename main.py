@@ -87,18 +87,29 @@ def viewer():
 
 
 @socketio.on("nnImgClick")
-def nn_img_click(idx):
+def nn_img_click(data):
     """
     When user clicks on one of the closest images...
     Load a higher resolution image and send it to the viewport
     """
     code = session.get("code")
     name = session.get("name")
-    pose = session.get("pose")
-    pose = np.array(pose)
 
-    idx = int(idx["idx"])
-    print(str(idx))
+    """
+    Set Model by code
+    """
+    if int(code) == 1:
+        model = model_1
+
+    filename = data["filename"]
+
+    with open(os.path.join(model.images_files, filename), 'rb') as f:
+        img_data = f.read()
+    socketio.emit("img1", {'image': img_data})
+
+    # Set the pose as the nearest_img clicked
+    pose = model.images.get_pose_by_filename(filename)
+    session["pose"] = pose.tolist()
 
 @socketio.on('key_control')
 def key_control(data):
@@ -124,7 +135,7 @@ def key_control(data):
     pose = session.get("pose")
     pose = np.array(pose)
     logging.info(f'{name} pressed {key} in model {code}, by {step} steps')
-    
+
     """
     Set Model by code
     """
@@ -137,10 +148,9 @@ def key_control(data):
     if key == " ":
         filenames = model.images.get_closest_n(pose=pose, n=3)
         print("The closest images are: " + ', '.join(str(x) for x in filenames))
-        # TODO: Remove hardcoded filepath standardize on colmap
-        filepath = "/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/reconstruction/images/"
+        filepath = model.images_thumbnails
         for counter, file in enumerate(filenames):
-            with open(os.path.join(filepath, "smalls", file), 'rb') as f:
+            with open(os.path.join(filepath, file), 'rb') as f:
                 img_data = f.read()
             # Emit the image to topic img1
             socketio.emit("nnImg_" + str(counter + 1), {'image': img_data, 'filename': file})
@@ -260,8 +270,7 @@ def disconnect():
 
 
 if __name__ == '__main__':
-    config_path = os.getenv('GS_CONFIG_PATH', '/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud'
-                                              '/iteration_30000/config.yaml')
+    config_path = os.getenv('GS_CONFIG_PATH', './output/5526b40b-d/point_cloud/iteration_30000/config.yaml')
     host = os.getenv('GS_HOST', '127.0.0.1')
     debug = os.getenv('GS_DEBUG', 'false').lower() == 'true'    
     model_1 = GS_Model(config_path=config_path)
