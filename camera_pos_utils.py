@@ -50,8 +50,9 @@ class ImagesMeta:
 
     def get_pose_by_filename(self, filename):
         idx = self.files.index(filename)
-        return compose_44(Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix(), self.t_vec[idx])
-
+        R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
+        R = np.linalg.inv(R)
+        return compose_44(R, self.t_vec[idx])
 
 def compose_44(r, t):
     return np.vstack((np.hstack((np.reshape(r, (3, 3)), np.reshape(t, (3, 1)))), np.array([0, 0, 0, 1])))
