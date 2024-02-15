@@ -10,6 +10,8 @@ socket.on('connect', function(){
 const viewportCanvas = document.getElementById('myCanvas');
 const viewportCtx = viewportCanvas.getContext('2d');
 const img1 = new Image()
+let viewportCanvasWidth = 800
+let img1Scale = 1
 
 // Get nnImg_X canvases
 const nnImg1Canvas = document.getElementById('nnImg_1');
@@ -44,10 +46,36 @@ socket.on('img1', function(msg) {
         img1.onload = function () {
             //viewportCanvas.height = img1.height;
             //viewportCanvas.width = img1.width;
-            viewportCtx.drawImage(img1, 0, 0, 800, 600); //Sorry for the hardcode :(
+
+            //Default canvas width is 800 set img1Scale
+            img1Scale = viewportCanvasWidth/img1.width
+
+            viewportCtx.drawImage(img1, 0, 0, img1.width*img1Scale, img1.height*img1Scale);
         }
         img1.src = img1_url
 });
+
+let zoomed = new Boolean(false);
+const zoomFactor = 2;
+viewportCanvas.addEventListener("dblclick", (e) => {
+
+    if (zoomed == false) {
+        let pix_x = e.offsetX / img1Scale
+        let pix_y = e.offsetY / img1Scale
+        let newImg1Width = img1.width / zoomFactor
+        let newImg1Height = img1.height / zoomFactor
+
+        let sx = Math.min(Math.max(pix_x - newImg1Width / 2, 0), img1.width-newImg1Width)
+        let sy = Math.min(Math.max(pix_y - newImg1Height / 2, 0), img1.height-newImg1Height)
+
+        viewportCtx.drawImage(img1, sx, sy, newImg1Width, newImg1Height, 0, 0, img1.width * img1Scale, img1.height * img1Scale)
+        zoomed = true
+    } else {
+            viewportCtx.drawImage(img1, 0, 0, img1.width*img1Scale, img1.height*img1Scale);
+            zoomed = false
+    }
+});
+
 
 // Step
 let step = 1;
