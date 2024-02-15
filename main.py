@@ -23,7 +23,6 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "development"
 socketio = SocketIO(app)
@@ -61,8 +60,7 @@ def home():
                               [0.16577646, 0.87778949, 0.4494483],
                               [-0.68636268, 0.42995355, -0.58655453]])
             T_vec = np.array([-0.32326042, -3.65895232, 2.27446875])
-            #R_mat = np.array([[-0.8210050288356835, -0.17857461458472693, 0.5422746994397166], [0.1249652793099283, 0.8705835196074918, 0.47588655618206266], [-0.5570766747885881, 0.45847076505896, -0.6924378210299766]])
-            #T_vec = np.array([-1.8636133065164748, 2.1165406815192687, 3.141789771805336])
+
             init_pose = camera.compose_44(R_mat, T_vec)
         else:
             init_pose = np.eye(4)
@@ -88,10 +86,40 @@ def viewer():
     return render_template("viewer.html")
 
 
+@socketio.on("nnImgClick")
+def nn_img_click(data):
+    """
+    When user clicks on one of the closest images...
+    Load a higher resolution image and send it to the viewport
+    """
+    code = session.get("code")
+    name = session.get("name")
+
+    """
+    Set Model by code
+    """
+    if int(code) == 1:
+        model = model_1
+
+    filename = data["filename"]
+
+    with open(os.path.join(model.images_files, filename), 'rb') as f:
+        img_data = f.read()
+    socketio.emit("img1", {'image': img_data})
+
+    # Set the pose as the nearest_img clicked
+    pose = model.images.get_pose_by_filename(filename)
+    session["pose"] = pose.tolist()
+
 @socketio.on('key_control')
 def key_control(data):
     """
     key_control listens for button presses from the client...
+
+    If key pressed is " " (spacebar) then...
+    1. get the closest images and send them to the client
+
+    If key pressed is qweasduiojkl then...
     1. then calculates a new pose
     2. get new view using gaussian splatting
     3. emit the image to the server
@@ -107,7 +135,26 @@ def key_control(data):
     pose = session.get("pose")
     pose = np.array(pose)
     logging.info(f'{name} pressed {key} in model {code}, by {step} steps')
-    
+
+    """
+    Set Model by code
+    """
+    if int(code) == 1:
+        model = model_1
+
+    """
+    When the user presses space-bar refresh the closest images...
+    """
+    if key == " ":
+        filenames = model.images.get_closest_n(pose=pose, n=3)
+        print("The closest images are: " + ', '.join(str(x) for x in filenames))
+        filepath = model.images_thumbnails
+        for counter, file in enumerate(filenames):
+            with open(os.path.join(filepath, file), 'rb') as f:
+                img_data = f.read()
+            # Emit the image to topic img1
+            socketio.emit("nnImg_" + str(counter + 1), {'image': img_data, 'filename': file})
+
     """
     SIBR Viewer Controls
     
@@ -115,9 +162,6 @@ def key_control(data):
     Left-Hand Camera Translation: a,d (left right), e,f (forward back), q,e (up down)
     We should also handle pressing multiple keys at the same time...
     """
-    # Initialize C2C Transform Matricies
-    C2C_Rot = np.eye(4, dtype=np.float32)
-    C2C_T = np.eye(4, dtype=np.float32)
 
     # Calculate the new pose
     if key == "d":
@@ -154,7 +198,7 @@ def key_control(data):
     R, T = camera.decompose_44(np.array(pose))
     cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963, C2C_Rot=C2C_Rot, C2C_T=C2C_T)
 
-    img1 = model_1.render_view(cam=cam)
+    img1 = model.render_view(cam=cam)
 
     torch.cuda.empty_cache()  # This should be done periodically... (not everytime)
     img_data = io.BytesIO()  # This is probably also not very efficient
@@ -192,7 +236,11 @@ def connect():
 
     R, T = camera.decompose_44(np.array(pose))
     cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963)
-    img1 = model_1.render_view(cam=cam)
+
+    if int(code) == 1:
+        model = model_1
+
+    img1 = model.render_view(cam=cam)
     global init_img_data
     init_img_data = io.BytesIO()
     img1.save(init_img_data, "JPEG")
@@ -204,16 +252,16 @@ def connect():
 @socketio.on("pose_reset")
 def image_reset():
     logger.info("Pose reset to initial configuration.")
-    
+
     session["code"] = session.get("code")
     session["name"] = session.get("name")
     global init_pose_for_reset
     session["pose"] = init_pose_for_reset
- 
+
     # Send an initial (placeholder) image to canvas 1
     global init_img_data
     socketio.emit("img1", {'image': init_img_data.getvalue()})
-    
+
 
 @socketio.on("disconnect")
 def disconnect():
@@ -222,9 +270,9 @@ def disconnect():
 
 
 if __name__ == '__main__':
-    config_path = os.getenv('GS_CONFIG_PATH', '/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud'
-                                              '/iteration_30000/config.yaml')
+    config_path = os.getenv('GS_CONFIG_PATH', './output/5526b40b-d/point_cloud/iteration_30000/config.yaml')
     host = os.getenv('GS_HOST', '127.0.0.1')
     debug = os.getenv('GS_DEBUG', 'false').lower() == 'true'    
     model_1 = GS_Model(config_path=config_path)
+
     socketio.run(app, host=host, debug=debug, allow_unsafe_werkzeug=True)

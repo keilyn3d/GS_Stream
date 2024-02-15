@@ -6,16 +6,35 @@ socket.on('connect', function(){
     socket.emit('my_event', {data: 'I\'m connected!'});
 });
 
-// Get the canvas and button elements
-const canvas = document.getElementById('myCanvas');
-const ctx = canvas.getContext('2d');
+// Get the viewport_canvas
+const viewportCanvas = document.getElementById('myCanvas');
+const viewportCtx = viewportCanvas.getContext('2d');
 const img1 = new Image()
 
+// Get nnImg_X canvases
+const nnImg1Canvas = document.getElementById('nnImg_1');
+const nnImg1Ctx = nnImg1Canvas.getContext('2d');
+const nnImg1 = new Image()
+let nnImg1Name = ""
+
+const nnImg2Canvas = document.getElementById('nnImg_2');
+const nnImg2Ctx = nnImg2Canvas.getContext('2d');
+const nnImg2 = new Image()
+let nnImg2Name = ""
+
+
+const nnImg3Canvas = document.getElementById('nnImg_3');
+const nnImg3Ctx = nnImg3Canvas.getContext('2d');
+const nnImg3 = new Image()
+let nnImg3Name = ""
+
+
+// Depreciated drawButton
 const drawButton = document.getElementById('drawButton');
 
 // listen for img1
 socket.on('img1', function(msg) {
-        console.log("Get Image!")
+        console.log("Update Viewport!")
         let arrayBufferView = new Uint8Array(msg['image']);
         console.log(arrayBufferView);
 
@@ -23,9 +42,9 @@ socket.on('img1', function(msg) {
         var img1_url = URL.createObjectURL(blob);
         console.log(img1_url);
         img1.onload = function () {
-            canvas.height = img1.height;
-            canvas.width = img1.width;
-            ctx.drawImage(img1, 0, 0);
+            //viewportCanvas.height = img1.height;
+            //viewportCanvas.width = img1.width;
+            viewportCtx.drawImage(img1, 0, 0, 800, 600); //Sorry for the hardcode :(
         }
         img1.src = img1_url
 });
@@ -66,14 +85,74 @@ stepValue.addEventListener('input', function() {
     } else {
         message.textContent = 'Value must be between 1 and 10.';
     }
+})
+
+    // Listens for nnImg_1
+socket.on('nnImg_1', function(msg){
+        console.log("Update 1st Nearest img!")
+        let arrayBufferView = new Uint8Array(msg['image']);
+        nnImg1Name = msg['filename'];
+
+        var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+        var nnimg1_url = URL.createObjectURL(blob);
+        console.log(nnimg1_url);
+        nnImg1.onload = function () {
+            nnImg1Ctx.drawImage(nnImg1, 0, 0, 266, 198);
+        }
+        nnImg1.src = nnimg1_url;
 });
+
+// Listens for nnImg_2
+socket.on('nnImg_2', function(msg){
+        console.log("Update 2nd Nearest img!")
+        let arrayBufferView = new Uint8Array(msg['image']);
+        nnImg2Name = msg['filename'];
+
+        var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+        var nnimg2_url = URL.createObjectURL(blob);
+        console.log(nnimg2_url);
+        nnImg2.onload = function () {
+            nnImg2Ctx.drawImage(nnImg2, 0, 0, 266, 198);
+        }
+        nnImg2.src = nnimg2_url;
+});
+
+// Listens for nnImg_2
+socket.on('nnImg_3', function(msg){
+        console.log("Update 3rd Nearest img!")
+        let arrayBufferView = new Uint8Array(msg['image']);
+        nnImg3Name = msg['filename'];
+
+        var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+        var nnimg3_url = URL.createObjectURL(blob);
+        console.log(nnimg3_url);
+        nnImg3.onload = function () {
+            nnImg3Ctx.drawImage(nnImg3, 0, 0, 266, 198);
+        }
+        nnImg3.src = nnimg3_url;
+
+});
+
+// nnImg_X Click Handler
+nnImg1Canvas.addEventListener("click", function() {
+    console.log("nnImg_1, was clicked");
+    socket.emit("nnImgClick", {filename: nnImg1Name})
+})
+nnImg2Canvas.addEventListener("click", function() {
+    console.log("nnImg_2, was clicked")
+    socket.emit("nnImgClick", {filename: nnImg2Name})
+})
+nnImg3Canvas.addEventListener("click", function() {
+    console.log("nnImg_3, was clicked")
+    socket.emit("nnImgClick", {filename: nnImg3Name})
+})
 
 // FPS limit
 let lastKeyPressedTime = 0;
 window.addEventListener("keypress", keyEventHandler, false);
 function keyEventHandler(event){
        const currentTime = new Date().getTime();
-       if (currentTime - lastKeyPressedTime > 100) { // 100ms = 0.1 second
+       if (currentTime - lastKeyPressedTime > 30) { // 100ms = 0.1 second
            lastKeyPressedTime = currentTime;
            socket.emit("key_control", {key: event.key, step: step})
         console.log(event.key);
