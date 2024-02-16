@@ -30,15 +30,11 @@ app.config["SECRET_KEY"] = "development"
 socketio.init_app(app)
 
 
-"""
-Available models (scenes) that we can load
-"""
-idxs = {1, 2, 3}
-model_1 = []
-
-# Store init values of pose and img_data to reset
-init_pose_for_reset = None
-init_img_data = None
+# """
+# Available models (scenes) that we can load
+# """
+# idxs = {1, 2, 3}
+# model_1 = []
 
 
 @app.route('/', methods=["POST", "GET"])
@@ -71,9 +67,6 @@ def home():
         session["name"] = name
         session["code"] = code
         session["pose"] = init_pose.tolist()
-
-        global init_pose_for_reset
-        init_pose_for_reset = init_pose
 
         return redirect(url_for("viewer"))
 

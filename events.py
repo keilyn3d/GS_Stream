@@ -20,6 +20,8 @@ config_path = os.getenv('GS_CONFIG_PATH', '/home/cviss/PycharmProjects/GS_Stream
 model_1 = GS_Model(config_path=config_path)
 
 
+# Store init values of pose and img_data to reset
+init_img_data = None
 idxs = {1, 2, 3}
 
 
@@ -191,10 +193,21 @@ def connect():
 def image_reset():
     logger.info("Pose reset to initial configuration.")
 
-    session["code"] = session.get("code")
+    code = session.get("code")
+    
+    if code == "1":
+        R_mat = np.array([[-0.70811329, -0.21124761, 0.67375813],
+                            [0.16577646, 0.87778949, 0.4494483],
+                            [-0.68636268, 0.42995355, -0.58655453]])
+        T_vec = np.array([-0.32326042, -3.65895232, 2.27446875])
+
+        init_pose = camera.compose_44(R_mat, T_vec)
+    else:
+        init_pose = np.eye(4)
+    
+    session["code"] = code
     session["name"] = session.get("name")
-    global init_pose_for_reset
-    session["pose"] = init_pose_for_reset
+    session["pose"] = init_pose.tolist()
 
     # Send an initial (placeholder) image to canvas 1
     global init_img_data
