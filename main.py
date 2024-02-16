@@ -2,9 +2,6 @@
 Imports for Web-Viewer
 """
 from flask import Flask, render_template, request, session, redirect, url_for
-from flask_socketio import join_room, leave_room, send, SocketIO
-
-from render_wrapper import GS_Model
 
 """
 Import to load GS_Model from render_wrapper.py
@@ -28,7 +25,6 @@ def home():
     if request.method == "POST":
         name = request.form.get("name")
         code = request.form.get("code")
-        join = request.form.get("join", False)  # see if they pressed it
 
         # Basic Error Checking
         if not name and not code:
@@ -70,7 +66,5 @@ def viewer():
 if __name__ == '__main__':
     config_path = os.getenv('GS_CONFIG_PATH', './output/5526b40b-d/point_cloud/iteration_30000/config.yaml')
     host = os.getenv('GS_HOST', '127.0.0.1')
-    debug = os.getenv('GS_DEBUG', 'false').lower() == 'true'    
-    model_1 = GS_Model(config_path=config_path)
-
+    debug = os.getenv('GS_DEBUG', 'false').lower() == 'true'
     socketio.run(app, host=host, debug=debug, allow_unsafe_werkzeug=True)
