@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 
 socketio = SocketIO()
 
-# ply_path = os.getenv('GS_PLY_PATH', '/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/point_cloud.ply')
-# model_1 = GS_Model(ply_path=ply_path)
 config_path = os.getenv('GS_CONFIG_PATH', '/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud'
                                               '/iteration_30000/config.yaml')
 model_1 = GS_Model(config_path=config_path)

@@ -4,37 +4,22 @@ Imports for Web-Viewer
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_socketio import join_room, leave_room, send, SocketIO
 
-from render_wrapper import DummyCamera, GS_Model
+from render_wrapper import GS_Model
 
 """
 Import to load GS_Model from render_wrapper.py
 """
 import camera_pos_utils as camera
-import io
 import numpy as np
-import torch
 
 # Load environment variables
 import os
-
-# Set up logging
-import logging
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 from events import socketio
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "development"
 socketio.init_app(app)
-
-
-# """
-# Available models (scenes) that we can load
-# """
-# idxs = {1, 2, 3}
-# model_1 = []
 
 
 @app.route('/', methods=["POST", "GET"])
