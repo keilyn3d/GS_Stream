@@ -1,11 +1,11 @@
 from flask import Flask
-from events import socketio
 
 """
 Imports for Web-Viewer
 """
-from home import home_blueprint
-from viewer import viewer_blueprint
+from .blueprints.home import home_blueprint
+from .blueprints.viewer import viewer_blueprint
+from .events.viewer_event import socketio
 
 def create_app():
     app = Flask(__name__)
@@ -15,4 +15,5 @@ def create_app():
     
     app.register_blueprint(home_blueprint)
     app.register_blueprint(viewer_blueprint)
+    
     return app
