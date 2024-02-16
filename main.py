@@ -1,25 +1,18 @@
 """
 Imports for Web-Viewer
 """
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask
 import os
 
 from home import home_blueprint
+from viewer import viewer_blueprint
 from events import socketio
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "development"
 app.register_blueprint(home_blueprint)
-
+app.register_blueprint(viewer_blueprint)
 socketio.init_app(app)
-
-@app.route("/viewer")
-def viewer():
-    code = session.get("code")
-    if code is None or session.get("name") is None:
-        return redirect(url_for("home"))
-
-    return render_template("viewer.html")
 
 
 if __name__ == '__main__':

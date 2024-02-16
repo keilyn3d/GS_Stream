@@ -38,6 +38,6 @@ def home():
         session["code"] = code
         session["pose"] = init_pose.tolist()
 
-        return redirect(url_for("viewer"))
+        return redirect(url_for("viewer.viewer"))
 
     return render_template("home.html")
