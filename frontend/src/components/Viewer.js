@@ -1,7 +1,34 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import io from 'socket.io-client';
+
 import '../styles/viewer_style.css';
 
-function Viewer() {
+const Viewer = () => {
+  useEffect(() => {
+    const serverAddress = 'http://127.0.0.1:5000';
+    const socket = io(serverAddress);
+
+    socket.on('connect', () => {
+      console.log('Connected to Socket.IO server');
+    });
+
+    socket.on('message', (message) => {
+      console.log('Received message from Socket.IO:', message);
+    });
+
+    return () => {
+      socket.disconnect();
+      console.log('Disconnected from Socket.IO server');
+    };
+  }, []);
+
+  const location = useLocation();
+
+  const { config } = location.state;
+
+  console.log('Viewer', config);
+
   return (
     <div className="content">
       <h1>WebInspector 2.0</h1>
@@ -24,21 +51,21 @@ function Viewer() {
           <canvas id="nnImg_3" width="266" height="198"></canvas>
         </div>
       </div>
-      <div class="button-container">
+      <div className="button-container">
         <span>Pose Reset</span>
-        <button id="reset" class="buttons">
+        <button id="reset" className="buttons">
           Reset
         </button>
       </div>
       Step
       <div>
         <button id="decrease">-</button>
-        <input type="text" id="stepValue" value="1"></input>
+        <input type="text" id="stepValue" value="1" readOnly></input>
         <button id="increase">+</button>
       </div>
       <div id="message"></div>
     </div>
   );
-}
+};
 
 export default Viewer;

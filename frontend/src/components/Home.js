@@ -1,20 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/style.css';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const navigate = useNavigate();
 
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('1');
+  const serverAddress = 'http://127.0.0.1:5000';
 
-  const handleSubmit = (event) => {
+  const [name, setName] = useState('');
+  const [code, setCode] = useState('');
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Handle form submission here
-    // For example, pass name and code to Viewer component
-    // <Viewer name={name} code={code} />;
-    navigate('/viewer');
+    if (!code) {
+      // Notify the user (e.g., display an alert message)
+      alert('Please select a code.');
+      return; // Stop further processing and exit the function
+    }
+
+    try {
+      // Request the selected code from the server
+      const response = await fetch(
+        `${serverAddress}/api/models/${code}/config`,
+        {
+          method: 'GET', // or POST, depending on server implementation
+          headers: {
+            // Set headers if necessary
+            'Content-Type': 'application/json',
+          },
+          // body: JSON.stringify({ code }) // for POST requests
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Server response was not ok');
+      }
+
+      const config = await response.json();
+      console.log(config);
+
+      // Save the initial values received from the server to state or perform other logic
+      // For example: update state, save to local storage, pass to other components, etc.
+
+      navigate('/viewer', { state: { config } });
+    } catch (error) {
+      console.error('Fetching initial values failed', error);
+    }
   };
+
+  const [models, setModels] = useState([]);
+
+  useEffect(() => {
+    fetch(serverAddress + '/api/codes')
+      .then((response) => response.json())
+      .then((data) => {
+        setModels(data);
+      })
+      .catch((error) => console.error('Fetching data failed', error));
+  }, []);
+
+  console.log(models);
 
   return (
     <div>
@@ -37,14 +82,15 @@ const Home = () => {
             value={code}
             onChange={(e) => setCode(e.target.value)}
           >
-            <option value="1">1</option>
-            {/* <option value="2">2</option> */}
+            <option value="">Please select a model</option>
+
+            {models.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
           </select>
-          <button
-            type="submit"
-            name="join"
-            onClick={(event) => handleSubmit(event, name, code)}
-          >
+          <button type="submit" name="join">
             Connect
           </button>
         </div>
