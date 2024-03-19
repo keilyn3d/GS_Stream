@@ -5,15 +5,19 @@ import io from 'socket.io-client';
 import '../styles/viewer_style.css';
 
 const Viewer = () => {
+  const location = useLocation();
+  const { userName, selectedModel, config } = location.state;
+
   useEffect(() => {
     const serverAddress = 'http://127.0.0.1:5000';
     const socket = io(serverAddress);
 
     socket.on('connect', () => {
+      socket.emit('get_user_name', userName);
       console.log('Connected to Socket.IO server');
     });
 
-    socket.on('message', (message) => {
+    socket.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
     });
 
@@ -23,15 +27,10 @@ const Viewer = () => {
     };
   }, []);
 
-  const location = useLocation();
-
-  const { config } = location.state;
-
-  console.log('Viewer', config);
-
   return (
     <div className="content">
-      <h1>WebInspector 2.0</h1>
+      <h1>Web Inspector 2.0 </h1>
+      User: {userName}, Model: {selectedModel} <br />
       <p>
         Welcome to CViSS Lab's Web Inspection Tool!
         <br />
