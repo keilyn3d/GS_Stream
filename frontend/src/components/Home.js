@@ -7,21 +7,34 @@ const Home = () => {
 
   const serverAddress = 'http://127.0.0.1:5000';
 
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
+  const [userName, setUserName] = useState('');
+  const [selectedModel, setSelectedModel] = useState('');
+  const [allModels, setAllModels] = useState([]);
+
+  useEffect(() => {
+    fetch(serverAddress + '/api/codes')
+      .then((response) => response.json())
+      .then((data) => {
+        setAllModels(data);
+      })
+      .catch((error) => console.error('Fetching data failed', error));
+  }, []);
+  console.log(allModels);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!code) {
+
+    if (!selectedModel) {
       // Notify the user (e.g., display an alert message)
+      // Stop further processing and exit the function
       alert('Please select a code.');
-      return; // Stop further processing and exit the function
+      return;
     }
 
     try {
       // Request the selected code from the server
       const response = await fetch(
-        `${serverAddress}/api/models/${code}/config`,
+        `${serverAddress}/api/models/${selectedModel}/config`,
         {
           method: 'GET', // or POST, depending on server implementation
           headers: {
@@ -42,24 +55,11 @@ const Home = () => {
       // Save the initial values received from the server to state or perform other logic
       // For example: update state, save to local storage, pass to other components, etc.
 
-      navigate('/viewer', { state: { config } });
+      navigate('/viewer', { state: { userName, selectedModel, config } });
     } catch (error) {
       console.error('Fetching initial values failed', error);
     }
   };
-
-  const [models, setModels] = useState([]);
-
-  useEffect(() => {
-    fetch(serverAddress + '/api/codes')
-      .then((response) => response.json())
-      .then((data) => {
-        setModels(data);
-      })
-      .catch((error) => console.error('Fetching data failed', error));
-  }, []);
-
-  console.log(models);
 
   return (
     <div>
@@ -72,19 +72,19 @@ const Home = () => {
             type="text"
             placeholder="something@gmail.com"
             name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
           />
         </div>
         <div className="join">
           <select
             name="code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
           >
             <option value="">Please select a model</option>
 
-            {models.map((model) => (
+            {allModels.map((model) => (
               <option key={model} value={model}>
                 {model}
               </option>
