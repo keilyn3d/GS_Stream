@@ -9,8 +9,8 @@ const Viewer = () => {
   const { userName, selectedModel, config } = location.state;
 
   useEffect(() => {
-    const serverAddress = 'http://127.0.0.1:5000';
-    const socket = io(serverAddress);
+    const backendAddress = process.env.REACT_APP_BACKEND_URL;
+    const socket = io(backendAddress);
 
     socket.on('connect', () => {
       socket.emit('get_user_name', userName);

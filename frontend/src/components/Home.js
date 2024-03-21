@@ -5,14 +5,14 @@ import { useNavigate } from 'react-router-dom';
 const Home = () => {
   const navigate = useNavigate();
 
-  const serverAddress = 'http://127.0.0.1:5000';
+  const backendAddress = process.env.REACT_APP_BACKEND_URL;
 
   const [userName, setUserName] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
   const [allModels, setAllModels] = useState([]);
 
   useEffect(() => {
-    fetch(serverAddress + '/api/codes')
+    fetch(backendAddress + '/api/codes')
       .then((response) => response.json())
       .then((data) => {
         setAllModels(data);
@@ -34,7 +34,7 @@ const Home = () => {
     try {
       // Request the selected code from the server
       const response = await fetch(
-        `${serverAddress}/api/models/${selectedModel}/config`,
+        `${backendAddress}/api/models/${selectedModel}/config`,
         {
           method: 'GET', // or POST, depending on server implementation
           headers: {
