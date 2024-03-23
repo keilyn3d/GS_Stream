@@ -7,18 +7,33 @@ import '../styles/viewer_style.css';
 const Viewer = () => {
   const location = useLocation();
   const { userName, selectedModel, config } = location.state;
+  console.log(config);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
     const socket = io(backendAddress);
 
     socket.on('connect', () => {
-      socket.emit('get_user_name', userName);
+      socket.emit('set_user_name', userName);
+      socket.emit('get_init_image', selectedModel);
       console.log('Connected to Socket.IO server');
     });
 
     socket.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
+    });
+
+    socket.on('set_client_init_image', (base64Img) => {
+      console.log('Received init image');
+      const canvas = document.getElementById('myCanvas');
+      const context = canvas.getContext('2d');
+
+      const image = new Image();
+      image.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      };
+      image.src = `data:image/jpeg;base64,${base64Img}`;
     });
 
     return () => {

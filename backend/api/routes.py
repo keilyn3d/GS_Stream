@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from backend.model.model_config_fetcher import get_model_config_data
+from ..model_config.model_config_fetcher import get_model_config_data
 
 api_blueprint = Blueprint('api', __name__)
 
