@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify
-from .fetch_data_module import fetch_initial_data  
-
+from backend.model.model_config_fetcher import get_model_config_data
 
 api_blueprint = Blueprint('api', __name__)
 
@@ -12,5 +11,5 @@ def get_model_ids():
 
 @api_blueprint.route('/models/<model_id>/config', methods=['GET'])
 def get_initial_data(model_id):
-    initial_data = fetch_initial_data(model_id)
+    initial_data = get_model_config_data(model_id)
     return jsonify(initial_data)
