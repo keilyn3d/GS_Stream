@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
@@ -7,6 +7,8 @@ import '../styles/viewer_style.css';
 const Viewer = () => {
   const location = useLocation();
   const { userName, selectedModel, config } = location.state;
+  const lastKeyPressedTime = useRef(0);
+
   console.log(config);
 
   useEffect(() => {
@@ -36,9 +38,37 @@ const Viewer = () => {
       image.src = `data:image/jpeg;base64,${base64Img}`;
     });
 
+    socket.on('set_client_main_image', (base64Img) => {
+      console.log('Received main image');
+      const canvas = document.getElementById('myCanvas');
+      const context = canvas.getContext('2d');
+
+      const image = new Image();
+      image.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      };
+      image.src = `data:image/jpeg;base64,${base64Img}`;
+    });
+
+    var step = 1;
+    const keyEventHandler = (event) => {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastKeyPressedTime.current > 30) {
+        lastKeyPressedTime.current = currentTime;
+        socket.emit('key_control', { key: event.key, step: step });
+        console.log(event.key);
+      } else {
+        console.log('Too many requests!');
+      }
+    };
+
+    window.addEventListener('keypress', keyEventHandler, false);
+
     return () => {
       socket.disconnect();
       console.log('Disconnected from Socket.IO server');
+      window.removeEventListener('keypress', keyEventHandler, false);
     };
   }, []);
 

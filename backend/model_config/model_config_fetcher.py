@@ -8,7 +8,7 @@ def get_model_config_data(model_id):
     else:
         return 'Invalid model_id'
 
-def get_model_init_pose_data():
+def get_model_init_pose_raw_data():
     # Raw list form before using numpy array
     R_mat = [[-0.70811329, -0.21124761, 0.67375813],
                 [0.16577646, 0.87778949, 0.4494483],
