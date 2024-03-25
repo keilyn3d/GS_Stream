@@ -59,7 +59,7 @@ def configure_socketio(socketio: SocketIO):
         image.seek(0)
         base64_img = base64.b64encode(image.read()).decode('utf-8')
         return base64_img
-
+    
     @socketio.on('custom_event')
     def handle_custom_event(data):
         print('Received custom event:', data)
@@ -80,9 +80,7 @@ def configure_socketio(socketio: SocketIO):
 # def connect():
 #     pass
     
-# @socketio.on("pose_reset")
-# def image_reset():
-#     pass
+
     
 # @socketio.on("disconnect")
 # def disconnect():

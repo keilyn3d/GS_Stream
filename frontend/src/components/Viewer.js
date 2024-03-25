@@ -8,24 +8,27 @@ const Viewer = () => {
   const location = useLocation();
   const { userName, selectedModel, config } = location.state;
   const lastKeyPressedTime = useRef(0);
+  const socketRef = useRef(null);
 
   console.log(config);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
-    const socket = io(backendAddress);
+    if (!socketRef.current) {
+      socketRef.current = io(backendAddress);
+    }
 
-    socket.on('connect', () => {
-      socket.emit('set_user_name', userName);
-      socket.emit('get_init_image', selectedModel);
+    socketRef.current.on('connect', () => {
+      socketRef.current.emit('set_user_name', userName);
+      socketRef.current.emit('get_init_image', selectedModel);
       console.log('Connected to Socket.IO server');
     });
 
-    socket.on('response', (message) => {
+    socketRef.current.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
     });
 
-    socket.on('set_client_init_image', (base64Img) => {
+    socketRef.current.on('set_client_init_image', (base64Img) => {
       console.log('Received init image');
       const canvas = document.getElementById('myCanvas');
       const context = canvas.getContext('2d');
@@ -38,7 +41,7 @@ const Viewer = () => {
       image.src = `data:image/jpeg;base64,${base64Img}`;
     });
 
-    socket.on('set_client_main_image', (base64Img) => {
+    socketRef.current.on('set_client_main_image', (base64Img) => {
       console.log('Received main image');
       const canvas = document.getElementById('myCanvas');
       const context = canvas.getContext('2d');
@@ -56,7 +59,7 @@ const Viewer = () => {
       const currentTime = new Date().getTime();
       if (currentTime - lastKeyPressedTime.current > 30) {
         lastKeyPressedTime.current = currentTime;
-        socket.emit('key_control', { key: event.key, step: step });
+        socketRef.current.emit('key_control', { key: event.key, step: step });
         console.log(event.key);
       } else {
         console.log('Too many requests!');
@@ -66,11 +69,20 @@ const Viewer = () => {
     window.addEventListener('keypress', keyEventHandler, false);
 
     return () => {
-      socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
       console.log('Disconnected from Socket.IO server');
       window.removeEventListener('keypress', keyEventHandler, false);
     };
   }, []);
+
+  const handleResetClick = () => {
+    if (socketRef.current) {
+      socketRef.current.emit('get_init_image', selectedModel);
+    }
+  };
 
   return (
     <div className="content">
@@ -97,7 +109,7 @@ const Viewer = () => {
       </div>
       <div className="button-container">
         <span>Pose Reset</span>
-        <button id="reset" className="buttons">
+        <button id="reset" className="buttons" onClick={handleResetClick}>
           Reset
         </button>
       </div>
