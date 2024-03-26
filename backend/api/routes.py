@@ -5,7 +5,7 @@ api_blueprint = Blueprint('api', __name__)
 
 @api_blueprint.route('/codes', methods=['GET'])
 def get_model_ids():
-    model_ids = ['model1', 'model2', 'model3', 'model4']  
+    model_ids = ['model1']  
     return jsonify(model_ids)
 
 
