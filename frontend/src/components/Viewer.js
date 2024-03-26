@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
 import '../styles/viewer_style.css';
+import StepControl from './StepControl';
 
 const Viewer = () => {
   const location = useLocation();
@@ -145,23 +146,12 @@ const Viewer = () => {
           Reset
         </button>
       </div>
-      Step
-      <div>
-        <button id="decrease" onClick={decreaseStep}>
-          -
-        </button>
-        <input
-          type="text"
-          id="stepValue"
-          value={step}
-          readOnly
-          style={{ textAlign: 'center' }}
-        ></input>
-        <button id="increase" onClick={increaseStep}>
-          +
-        </button>
-      </div>
-      <div id="message">{message}</div>
+      <StepControl
+        step={step}
+        decreaseStep={decreaseStep}
+        increaseStep={increaseStep}
+        message={message}
+      />
     </div>
   );
 };
