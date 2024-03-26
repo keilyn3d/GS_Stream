@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
@@ -9,8 +9,10 @@ const Viewer = () => {
   const { userName, selectedModel, config } = location.state;
   const lastKeyPressedTime = useRef(0);
   const socketRef = useRef(null);
+  const [step, setStep] = useState(1);
+  const [message, setMessage] = useState('');
 
-  console.log(config);
+  // console.log(step);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -54,12 +56,23 @@ const Viewer = () => {
       image.src = `data:image/jpeg;base64,${base64Img}`;
     });
 
-    var step = 1;
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      console.log('Disconnected from Socket.IO server');
+    };
+  }, []);
+
+  useEffect(() => {
     const keyEventHandler = (event) => {
       const currentTime = new Date().getTime();
       if (currentTime - lastKeyPressedTime.current > 30) {
         lastKeyPressedTime.current = currentTime;
-        socketRef.current.emit('key_control', { key: event.key, step: step });
+        if (socketRef.current) {
+          socketRef.current.emit('key_control', { key: event.key, step: step });
+        }
         console.log(event.key);
       } else {
         console.log('Too many requests!');
@@ -69,19 +82,36 @@ const Viewer = () => {
     window.addEventListener('keypress', keyEventHandler, false);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-      console.log('Disconnected from Socket.IO server');
       window.removeEventListener('keypress', keyEventHandler, false);
     };
-  }, []);
+  }, [step]);
 
   const handleResetClick = () => {
     if (socketRef.current) {
       socketRef.current.emit('get_init_image', selectedModel);
     }
+  };
+
+  const increaseStep = () => {
+    setStep((prevStep) => {
+      if (prevStep < 10) {
+        prevStep += 1;
+      } else {
+        setMessage('The value cannot exceed 10.');
+      }
+      return prevStep;
+    });
+  };
+
+  const decreaseStep = () => {
+    setStep((prevStep) => {
+      if (prevStep > 1) {
+        prevStep -= 1;
+      } else {
+        setMessage('The value cannot be less than 1.');
+      }
+      return prevStep;
+    });
   };
 
   return (
@@ -115,11 +145,21 @@ const Viewer = () => {
       </div>
       Step
       <div>
-        <button id="decrease">-</button>
-        <input type="text" id="stepValue" value="1" readOnly></input>
-        <button id="increase">+</button>
+        <button id="decrease" onClick={decreaseStep}>
+          -
+        </button>
+        <input
+          type="text"
+          id="stepValue"
+          value={step}
+          readOnly
+          style={{ textAlign: 'center' }}
+        ></input>
+        <button id="increase" onClick={increaseStep}>
+          +
+        </button>
       </div>
-      <div id="message"></div>
+      <div id="message">{message}</div>
     </div>
   );
 };
