@@ -11,6 +11,7 @@ const Viewer = () => {
   const socketRef = useRef(null);
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState('');
+  const initStepValue = 1;
 
   // console.log(step);
 
@@ -90,6 +91,7 @@ const Viewer = () => {
     if (socketRef.current) {
       socketRef.current.emit('get_init_image', selectedModel);
     }
+    setStep(initStepValue);
   };
 
   const increaseStep = () => {
