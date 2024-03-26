@@ -41,6 +41,12 @@ def configure_socketio(socketio: SocketIO):
         print(f'Message to {user_name}: get_init_image')
         emit('set_client_init_image', base64_img)
 
+    @socketio.on('reset_pose')
+    def handle_reset_pose(model_id):
+        user_states[request.sid]['current_pose'] = user_states[request.sid]['init_pose']
+        print(f'Reset pose for User:{user_name}')
+        emit('response', {'message': 'Pose reset'})
+        
     @socketio.on('key_control')
     def key_control(data):      
         key, step = data['key'], data['step']
@@ -70,18 +76,3 @@ def configure_socketio(socketio: SocketIO):
 # def nn_img_click(data):
 #     pass
     
-
-    
-# @socketio.on('my_event')
-# def handle_message(data):
-#     pass
-    
-# @socketio.on("connect")
-# def connect():
-#     pass
-    
-
-    
-# @socketio.on("disconnect")
-# def disconnect():
-#     pass    

@@ -90,6 +90,7 @@ const Viewer = () => {
   const handleResetClick = () => {
     if (socketRef.current) {
       socketRef.current.emit('get_init_image', selectedModel);
+      socketRef.current.emit('reset_pose', selectedModel);
     }
     setStep(initStepValue);
   };
