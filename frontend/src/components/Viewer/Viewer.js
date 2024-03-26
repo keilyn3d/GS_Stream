@@ -62,7 +62,6 @@ const Viewer = () => {
         if (socketRef.current) {
           socketRef.current.emit('key_control', { key: event.key, step: step });
         }
-        console.log(event.key);
       } else {
         console.log('Too many requests!');
       }
