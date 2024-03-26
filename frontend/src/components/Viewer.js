@@ -3,8 +3,9 @@ import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
 import '../styles/viewer_style.css';
-import StepControl from './StepControl';
+import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
+import StepControl from './StepControl';
 
 const Viewer = () => {
   const location = useLocation();
@@ -131,16 +132,7 @@ const Viewer = () => {
         press on an image view on main canvas. <br />
         Double-click on the main canvas to zoom-in and zoom-out.
       </p>
-      <div className="viewer-container">
-        <div className="viewport-container">
-          <canvas id="myCanvas" width="800" height="600"></canvas>
-        </div>
-        <div className="closest-imgs-container">
-          <canvas id="nnImg_1" width="266" height="198"></canvas>
-          <canvas id="nnImg_2" width="266" height="198"></canvas>
-          <canvas id="nnImg_3" width="266" height="198"></canvas>
-        </div>
-      </div>
+      <CanvasContainer />
       <ResetButton handleResetClick={handleResetClick} />
       <StepControl
         step={step}
