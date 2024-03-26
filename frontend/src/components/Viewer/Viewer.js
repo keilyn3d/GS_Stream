@@ -37,28 +37,12 @@ const Viewer = () => {
 
     socketRef.current.on('set_client_init_image', (base64Img) => {
       console.log('Received init image');
-      const canvas = document.getElementById('myCanvas');
-      const context = canvas.getContext('2d');
-
-      const image = new Image();
-      image.onload = () => {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      };
-      image.src = `data:image/jpeg;base64,${base64Img}`;
+      drawImage(base64Img);
     });
 
     socketRef.current.on('set_client_main_image', (base64Img) => {
       console.log('Received main image');
-      const canvas = document.getElementById('myCanvas');
-      const context = canvas.getContext('2d');
-
-      const image = new Image();
-      image.onload = () => {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      };
-      image.src = `data:image/jpeg;base64,${base64Img}`;
+      drawImage(base64Img);
     });
 
     return () => {
@@ -90,6 +74,18 @@ const Viewer = () => {
       window.removeEventListener('keypress', keyEventHandler, false);
     };
   }, [step]);
+
+  function drawImage(base64Img) {
+    const canvas = document.getElementById('myCanvas');
+    const context = canvas.getContext('2d');
+
+    const image = new Image();
+    image.onload = () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    };
+    image.src = `data:image/jpeg;base64,${base64Img}`;
+  }
 
   const handleResetClick = () => {
     if (socketRef.current) {
