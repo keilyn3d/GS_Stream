@@ -1,7 +1,7 @@
 import base64
 from flask import request
 from flask_socketio import SocketIO, emit
-from ..image_renderer.image_creator import get_model_init_image, get_model_init_pose, get_model_image, get_model_changed_pose
+from ..image_renderer.image_creator import *
 
 user_name = ''
 user_states = {}
@@ -52,27 +52,32 @@ def configure_socketio(socketio: SocketIO):
         key, step = data['key'], data['step']
         print(f'Key:{key}, Step:{step} are recieved from User:{user_name}')
         current_pose = user_states[request.sid]['current_pose']
-        image = get_model_image(current_pose, key, step)
-        base64_img = make_base64_img(image)
-        
-        current_pose = user_states[request.sid]['current_pose']
-        user_states[request.sid]['current_pose'] = get_model_changed_pose(current_pose, key, step)
+        if key == ' ':
+            handle_space_key(current_pose)
+        else:
+            handle_other_keys(key, step, current_pose)
 
-        print(f'Message to {user_name}: set_client_main_image')
-        emit('set_client_main_image', base64_img)
+def handle_space_key(current_pose):
+    filenames = model.images.get_closest_n(pose=current_pose, n=3)
+    print("The closest images are: " + ', '.join(str(x) for x in filenames))
+    closest_images = {}
+    filepath = model.images_thumbnails
+    for file in filenames:
+        with open(os.path.join(filepath, file), 'rb') as f:
+            img_data = f.read()
+                # Encode img_data to base64
+            closest_images[file] = base64.b64encode(img_data).decode('utf-8')
+    emit("nnImg", closest_images)
 
-    def make_base64_img(image):
-        image.seek(0)
-        base64_img = base64.b64encode(image.read()).decode('utf-8')
-        return base64_img
-    
-    @socketio.on('custom_event')
-    def handle_custom_event(data):
-        print('Received custom event:', data)
-        emit('response', {'message': 'Received your custom event'})
+def handle_other_keys(key, step, current_pose):
+    image = get_model_image(current_pose, key, step)
+    base64_img = make_base64_img(image)
+    user_states[request.sid]['current_pose'] = get_model_changed_pose(current_pose, key, step)
+    print(f'Message to {user_name}: set_client_main_image')
+    emit('set_client_main_image', base64_img)
 
+def make_base64_img(image):
+    image.seek(0)
+    base64_img = base64.b64encode(image.read()).decode('utf-8')
+    return base64_img
 
-# @socketio.on("nnImgClick")
-# def nn_img_click(data):
-#     pass
-    

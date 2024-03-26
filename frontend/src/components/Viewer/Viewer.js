@@ -10,14 +10,13 @@ import StepControl from './StepControl';
 
 const Viewer = () => {
   const location = useLocation();
-  const { userName, selectedModel, config } = location.state;
+  const { userName, selectedModel } = location.state;
   const lastKeyPressedTime = useRef(0);
   const socketRef = useRef(null);
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState('');
   const initStepValue = 1;
-
-  // console.log(step);
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -43,6 +42,19 @@ const Viewer = () => {
     socketRef.current.on('set_client_main_image', (base64Img) => {
       console.log('Received main image');
       drawImage(base64Img);
+    });
+
+    socketRef.current.on('nnImg', (data) => {
+      console.log('Received nnImages');
+
+      // Separate image names and base64 data
+      const entries = Object.entries(data);
+
+      // Draw each image on the canvas
+      entries.forEach(([, base64Img], index) => {
+        const canvasId = `nnImg_${index + 1}`;
+        drawImageOnCanvas(base64Img, canvasId);
+      });
     });
 
     return () => {
@@ -86,7 +98,21 @@ const Viewer = () => {
     image.src = `data:image/jpeg;base64,${base64Img}`;
   }
 
+  function drawImageOnCanvas(base64Img, canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+      const context = canvas.getContext('2d');
+      const image = new Image();
+      image.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      };
+      image.src = `data:image/jpeg;base64,${base64Img}`;
+    }
+  }
+
   const handleResetClick = () => {
+    setResetKey((prevKey) => prevKey + 1);
     if (socketRef.current) {
       socketRef.current.emit('get_init_image', selectedModel);
       socketRef.current.emit('reset_pose', selectedModel);
@@ -119,7 +145,7 @@ const Viewer = () => {
   return (
     <div className="content">
       <Header userName={userName} selectedModel={selectedModel} />
-      <CanvasContainer />
+      <CanvasContainer key={resetKey} />
       <ResetButton handleResetClick={handleResetClick} />
       <StepControl
         step={step}
