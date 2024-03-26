@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
-import '../styles/viewer_style.css';
+import 'styles/viewer_style.css';
 import Header from './Header';
 import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
