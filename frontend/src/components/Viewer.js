@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 
 import '../styles/viewer_style.css';
 import StepControl from './StepControl';
+import ResetButton from './ResetButton';
 
 const Viewer = () => {
   const location = useLocation();
@@ -140,12 +141,7 @@ const Viewer = () => {
           <canvas id="nnImg_3" width="266" height="198"></canvas>
         </div>
       </div>
-      <div className="button-container">
-        <span>Pose Reset</span>
-        <button id="reset" className="buttons" onClick={handleResetClick}>
-          Reset
-        </button>
-      </div>
+      <ResetButton handleResetClick={handleResetClick} />
       <StepControl
         step={step}
         decreaseStep={decreaseStep}
