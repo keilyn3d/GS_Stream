@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
 import '../styles/viewer_style.css';
+import Header from './Header';
 import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
 import StepControl from './StepControl';
@@ -121,17 +122,7 @@ const Viewer = () => {
 
   return (
     <div className="content">
-      <h1>Web Inspector 2.0 </h1>
-      User: {userName}, Model: {selectedModel} <br />
-      <p>
-        Welcome to CViSS Lab's Web Inspection Tool!
-        <br />
-        Use q,e,a,w,s,d to control camera translation and u,o,i,j,k,l to control
-        camera rotations. <br />
-        Press Spacebar to get nearest images shown to the right of the viewport,
-        press on an image view on main canvas. <br />
-        Double-click on the main canvas to zoom-in and zoom-out.
-      </p>
+      <Header userName={userName} selectedModel={selectedModel} />
       <CanvasContainer />
       <ResetButton handleResetClick={handleResetClick} />
       <StepControl
