@@ -8,7 +8,7 @@ import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
 import StepControl from './StepControl';
 
-const Viewer = () => {
+const SingleViewer = () => {
   const location = useLocation();
   const { userName, selectedModel } = location.state;
   const lastKeyPressedTime = useRef(0);
@@ -157,4 +157,4 @@ const Viewer = () => {
   );
 };
 
-export default Viewer;
+export default SingleViewer;
