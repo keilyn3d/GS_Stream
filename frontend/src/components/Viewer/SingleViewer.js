@@ -129,6 +129,7 @@ const SingleViewer = () => {
         height="600"
         mainImage={mainImage}
         nnImages={nnImages}
+        nnCanvasLocation="right"
         key={resetKey}
       />
       <ResetButton handleResetClick={handleResetClick} />

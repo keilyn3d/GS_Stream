@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, createRef, useState } from 'react';
 
-const CanvasContainer = ({ width, height, mainImage, nnImages }) => {
+const CanvasContainer = ({
+  width,
+  height,
+  mainImage,
+  nnImages,
+  nnCanvasLocation,
+}) => {
   const [mainCanvasImage, setMainCanvasImage] = useState(mainImage);
   const mainCanvasRef = useRef(null);
   const nnImagesCanvasRef = useRef([useRef(null), useRef(null), useRef(null)]);
@@ -157,25 +163,51 @@ const CanvasContainer = ({ width, height, mainImage, nnImages }) => {
 
   return (
     <div className="viewer-container">
-      <div className="viewport-container">
-        <canvas
-          ref={mainCanvasRef}
-          id="mainCanvas"
-          width={width}
-          height={height}
-        ></canvas>
-      </div>
-      <div className="closest-imgs-container">
-        {nnImagesCanvasRef.current.map((ref, index) => (
-          <canvas
-            key={index}
-            ref={ref}
-            id={`nnImg_${index + 1}`}
-            width={width / 3}
-            height={height / 3}
-          ></canvas>
-        ))}
-      </div>
+      {nnCanvasLocation === 'right' ? (
+        <>
+          <div className="viewport-container">
+            <canvas
+              ref={mainCanvasRef}
+              id="mainCanvas"
+              width={width}
+              height={height}
+            ></canvas>
+          </div>
+          <div className="closest-imgs-container">
+            {nnImagesCanvasRef.current.map((ref, index) => (
+              <canvas
+                key={index}
+                ref={ref}
+                id={`nnImg_${index + 1}`}
+                width={width / 3}
+                height={height / 3}
+              ></canvas>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="closest-imgs-container">
+            {nnImagesCanvasRef.current.map((ref, index) => (
+              <canvas
+                key={index}
+                ref={ref}
+                id={`nnImg_${index + 1}`}
+                width={width / 3}
+                height={height / 3}
+              ></canvas>
+            ))}
+          </div>
+          <div className="viewport-container">
+            <canvas
+              ref={mainCanvasRef}
+              id="mainCanvas"
+              width={width}
+              height={height}
+            ></canvas>
+          </div>
+        </>
+      )}
     </div>
   );
 };
