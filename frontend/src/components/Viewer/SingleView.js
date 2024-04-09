@@ -3,12 +3,12 @@ import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
 import 'styles/viewer_style.css';
-import Header from './Header';
+import SingleViewHeader from './SingleViewHeader';
 import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
 import StepControl from './StepControl';
 
-const SingleViewer = () => {
+const SingleView = () => {
   const location = useLocation();
   let userName = 'defaultUserName';
   let selectedModel = 'defaultSelectedModel';
@@ -121,7 +121,7 @@ const SingleViewer = () => {
 
   return (
     <div className="content">
-      <Header userName={userName} selectedModel={selectedModel} />
+      <SingleViewHeader userName={userName} selectedModel={selectedModel} />
       <CanvasContainer
         containerId="main"
         mainCanvasId="main"
@@ -143,4 +143,4 @@ const SingleViewer = () => {
   );
 };
 
-export default SingleViewer;
+export default SingleView;
