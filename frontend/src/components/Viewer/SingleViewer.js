@@ -10,13 +10,22 @@ import StepControl from './StepControl';
 
 const SingleViewer = () => {
   const location = useLocation();
-  const { userName, selectedModel } = location.state;
+  let userName = 'defaultUserName';
+  let selectedModel = 'defaultSelectedModel';
+
+  if (location && location.state) {
+    userName = location.state.userName || userName;
+    selectedModel = location.state.selectedModel || selectedModel;
+  }
+
   const lastKeyPressedTime = useRef(0);
   const socketRef = useRef(null);
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState('');
   const initStepValue = 1;
   const [resetKey, setResetKey] = useState(0);
+  const [mainImage, setMainImage] = useState('');
+  const [nnImages, setNnImages] = useState(['', '', '']);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -36,25 +45,18 @@ const SingleViewer = () => {
 
     socketRef.current.on('set_client_init_image', (base64Img) => {
       console.log('Received init image');
-      drawImage(base64Img);
+      setMainImage(base64Img);
     });
 
     socketRef.current.on('set_client_main_image', (base64Img) => {
       console.log('Received main image');
-      drawImage(base64Img);
+      setMainImage(base64Img);
     });
 
     socketRef.current.on('nnImg', (data) => {
       console.log('Received nnImages');
-
-      // Separate image names and base64 data
       const entries = Object.entries(data);
-
-      // Draw each image on the canvas
-      entries.forEach(([, base64Img], index) => {
-        const canvasId = `nnImg_${index + 1}`;
-        drawImageOnCanvas(base64Img, canvasId);
-      });
+      setNnImages(entries.map(([, base64Img]) => base64Img));
     });
 
     return () => {
@@ -85,31 +87,6 @@ const SingleViewer = () => {
       window.removeEventListener('keypress', keyEventHandler, false);
     };
   }, [step]);
-
-  function drawImage(base64Img) {
-    const canvas = document.getElementById('myCanvas');
-    const context = canvas.getContext('2d');
-
-    const image = new Image();
-    image.onload = () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    };
-    image.src = `data:image/jpeg;base64,${base64Img}`;
-  }
-
-  function drawImageOnCanvas(base64Img, canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (canvas) {
-      const context = canvas.getContext('2d');
-      const image = new Image();
-      image.onload = () => {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      };
-      image.src = `data:image/jpeg;base64,${base64Img}`;
-    }
-  }
 
   const handleResetClick = () => {
     setResetKey((prevKey) => prevKey + 1);
@@ -145,7 +122,15 @@ const SingleViewer = () => {
   return (
     <div className="content">
       <Header userName={userName} selectedModel={selectedModel} />
-      <CanvasContainer key={resetKey} />
+      <CanvasContainer
+        containerId="main"
+        mainCanvasId="main"
+        width="800"
+        height="600"
+        mainImage={mainImage}
+        nnImages={nnImages}
+        key={resetKey}
+      />
       <ResetButton handleResetClick={handleResetClick} />
       <StepControl
         step={step}
