@@ -9,6 +9,8 @@ const Home = () => {
 
   const [userName, setUserName] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
+  const [selectedModelForComparison, setSelectedModelForComparison] =
+    useState('');
   const [allModels, setAllModels] = useState([]);
 
   useEffect(() => {
@@ -50,12 +52,28 @@ const Home = () => {
       }
 
       const config = await response.json();
-      console.log(config);
 
       // Save the initial values received from the server to state or perform other logic
       // For example: update state, save to local storage, pass to other components, etc.
 
-      navigate('/viewer', { state: { userName, selectedModel, config } });
+      if (selectedModel && selectedModelForComparison) {
+        navigate('/dual-view', {
+          state: {
+            userName,
+            selectedModel,
+            selectedModelForComparison,
+            config,
+          },
+        });
+      } else {
+        navigate('/single-view', {
+          state: {
+            userName,
+            selectedModel,
+            config,
+          },
+        });
+      }
     } catch (error) {
       console.error('Fetching initial values failed', error);
     }
@@ -65,9 +83,8 @@ const Home = () => {
     <div>
       <h1 className="title">CViSS G.S. Inspector Registration</h1>
       <form onSubmit={handleSubmit} className="buttons">
-        <h3>Please Enter Email:</h3>
-        <div>
-          <label>Name:</label>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <label>Please Enter Email:</label>
           <input
             type="text"
             placeholder="something@gmail.com"
@@ -76,11 +93,28 @@ const Home = () => {
             onChange={(e) => setUserName(e.target.value)}
           />
         </div>
+        If you select one model, you will go to the single view, and if you
+        select two models, you will go to the dual view.
         <div className="join">
           <select
-            name="code"
+            name="model"
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
+          >
+            <option value="">Please select a model</option>
+
+            {allModels.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+
+          <select
+            name="model-for-comparison"
+            value={selectedModelForComparison}
+            onChange={(e) => setSelectedModelForComparison(e.target.value)}
+            disabled={!selectedModel}
           >
             <option value="">Please select a model</option>
 
