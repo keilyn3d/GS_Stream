@@ -5,4 +5,4 @@ export GS_DEBUG=true
 
 cd ..
 
-python main-backend.py
+python main.py

@@ -4,7 +4,7 @@ import os
 from gaussian_renderer import render
 import torchvision
 from gaussian_renderer import GaussianModel
-from camera_pos_utils import *
+from .camera_pos_utils import *
 
 from utils.graphics_utils import getWorld2View2, getProjectionMatrix
 

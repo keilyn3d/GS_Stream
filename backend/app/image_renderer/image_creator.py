@@ -3,9 +3,8 @@ import os
 
 import numpy as np
 from ..model_config.model_config_fetcher import get_model_init_pose_raw_data
-from render_wrapper import DummyCamera, GS_Model
-import camera_pos_utils as camera
-
+from .render_wrapper import DummyCamera, GS_Model
+from . import camera_pos_utils as camera
 
 config_path = os.getenv('GS_CONFIG_PATH', '/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud'
                                               '/iteration_30000/config.yaml')
