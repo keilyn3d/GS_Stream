@@ -1,22 +1,44 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+
 import io from 'socket.io-client';
 
-import 'styles/viewer_style.css';
-import Header from './Header';
+import DualViewHeader from './DualViewHeader';
 import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
 import StepControl from './StepControl';
 
-const Viewer = () => {
+const DualView = () => {
+  let userName = 'defaultUserName';
+  let leftModel = 'defaultLeftModel';
+  let rightModel = 'defaultRightModel';
+
   const location = useLocation();
-  const { userName, selectedModel } = location.state;
-  const lastKeyPressedTime = useRef(0);
+  if (location && location.state) {
+    userName = location.state.userName || userName;
+    leftModel = location.state.selectedModel || leftModel;
+    rightModel = location.state.selectedModelForComparison || rightModel;
+  }
+
+  // Socket
   const socketRef = useRef(null);
+
+  // Main Canvas
+  const [leftMainImage, setLeftMainImage] = useState('');
+  const [rightMainImage, setRightMainImage] = useState('');
+
+  // NN Images Canvas
+  const [leftNnImages, setLeftNnImages] = useState(['', '', '']);
+  const [rightNnImages, setRightNnImages] = useState(['', '', '']);
+
+  const lastKeyPressedTime = useRef(0);
+
+  const [leftResetKey, setLeftResetKey] = useState('left-0');
+  const [rightResetKey, setRightResetKey] = useState('right-0');
+
   const [step, setStep] = useState(1);
-  const [message, setMessage] = useState('');
   const initStepValue = 1;
-  const [resetKey, setResetKey] = useState(0);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -26,7 +48,8 @@ const Viewer = () => {
 
     socketRef.current.on('connect', () => {
       socketRef.current.emit('set_user_name', userName);
-      socketRef.current.emit('get_init_image', selectedModel);
+      socketRef.current.emit('get_init_image', leftModel);
+      socketRef.current.emit('get_init_image', rightModel);
       console.log('Connected to Socket.IO server');
     });
 
@@ -36,25 +59,21 @@ const Viewer = () => {
 
     socketRef.current.on('set_client_init_image', (base64Img) => {
       console.log('Received init image');
-      drawImage(base64Img);
+      setLeftMainImage(base64Img);
+      setRightMainImage(base64Img);
     });
 
     socketRef.current.on('set_client_main_image', (base64Img) => {
       console.log('Received main image');
-      drawImage(base64Img);
+      setLeftMainImage(base64Img);
+      setRightMainImage(base64Img);
     });
 
     socketRef.current.on('nnImg', (data) => {
       console.log('Received nnImages');
-
-      // Separate image names and base64 data
       const entries = Object.entries(data);
-
-      // Draw each image on the canvas
-      entries.forEach(([, base64Img], index) => {
-        const canvasId = `nnImg_${index + 1}`;
-        drawImageOnCanvas(base64Img, canvasId);
-      });
+      setLeftNnImages(entries.map(([, base64Img]) => base64Img));
+      setRightNnImages(entries.map(([, base64Img]) => base64Img));
     });
 
     return () => {
@@ -86,36 +105,20 @@ const Viewer = () => {
     };
   }, [step]);
 
-  function drawImage(base64Img) {
-    const canvas = document.getElementById('myCanvas');
-    const context = canvas.getContext('2d');
-
-    const image = new Image();
-    image.onload = () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    };
-    image.src = `data:image/jpeg;base64,${base64Img}`;
-  }
-
-  function drawImageOnCanvas(base64Img, canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (canvas) {
-      const context = canvas.getContext('2d');
-      const image = new Image();
-      image.onload = () => {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      };
-      image.src = `data:image/jpeg;base64,${base64Img}`;
-    }
-  }
-
   const handleResetClick = () => {
-    setResetKey((prevKey) => prevKey + 1);
+    setLeftResetKey((prevKey) => {
+      const numberPart = parseInt(prevKey.split('-')[1], 10);
+      return `left-${numberPart + 1}`;
+    });
+    setRightResetKey((prevKey) => {
+      const numberPart = parseInt(prevKey.split('-')[1], 10);
+      return `right-${numberPart + 1}`;
+    });
     if (socketRef.current) {
-      socketRef.current.emit('get_init_image', selectedModel);
-      socketRef.current.emit('reset_pose', selectedModel);
+      socketRef.current.emit('get_init_image', leftModel);
+      socketRef.current.emit('get_init_image', rightModel);
+      socketRef.current.emit('reset_pose', leftModel);
+      socketRef.current.emit('reset_pose', rightModel);
     }
     setStep(initStepValue);
   };
@@ -144,8 +147,33 @@ const Viewer = () => {
 
   return (
     <div className="content">
-      <Header userName={userName} selectedModel={selectedModel} />
-      <CanvasContainer key={resetKey} />
+      <DualViewHeader
+        userName={userName}
+        leftModel={leftModel}
+        rightModel={rightModel}
+      />
+      <div style={{ display: 'flex' }}>
+        <CanvasContainer
+          containerId="left-model"
+          mainCanvasId="left-model-main-canvas"
+          width="600"
+          height="475"
+          mainImage={leftMainImage}
+          nnImages={leftNnImages}
+          nnCanvasLocation="left"
+          key={leftResetKey}
+        />
+        <CanvasContainer
+          containerId="right-model"
+          mainCanvasId="right-model-main-canvas"
+          width="600"
+          height="475"
+          mainImage={rightMainImage}
+          nnImages={rightNnImages}
+          nnCanvasLocation="right"
+          key={rightResetKey}
+        />
+      </div>
       <ResetButton handleResetClick={handleResetClick} />
       <StepControl
         step={step}
@@ -157,4 +185,4 @@ const Viewer = () => {
   );
 };
 
-export default Viewer;
+export default DualView;
