@@ -63,10 +63,10 @@ class GS_Model():
 
         if config["images_txt_path"] is not None:
             self.images = ImagesMeta(config["images_txt_path"])
-            self.images_files = config["images_files"]
-            self.images_thumbnails = config["images_files_thumbnails"]
+            self.images_files = config["images_dir"]
+            self.images_thumbnails = config["images_dir_thumbnails"]
 
-        self.world2custom = np.array(config["world2custom"])
+        #self.world2custom = np.array(config["world2custom"])
 
         # First Set GPU Context (i.e., we can put different models on different GPUs if needed)
         device = torch.device(device)
