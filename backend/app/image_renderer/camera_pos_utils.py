@@ -1,6 +1,65 @@
 import numpy as np
+import math
 from scipy.spatial.transform import Rotation
 
+
+def pt_2_plane_dist(p: np.ndarray, p0: np.ndarray, n: np.ndarray) -> float:
+    """
+    Calculates the distance between some point p and the plane defined by its normal n and point p0
+    @param p: 3d point
+    @param p0: 3d point on the plane
+    @param n:  plane normal vector
+    """
+
+    return np.dot(p - p0, n)
+
+
+def r_2_yaw(z_vec: np.ndarray, plane_vec: np.ndarray, n: np.ndarray) -> float:
+    """
+    Calculates the angle between camera forward vector (z_vec) and a vector on the plane (plane_vec).
+    Such that the rotation is given in degrees about the normal n of the plane.
+    @return: angle between -360 and 360 degrees
+    """
+    plane_proj = z_vec / np.linalg.norm(z_vec)
+    dot = np.dot(plane_proj, plane_vec)
+
+    det = np.vstack((plane_proj, plane_vec, n))
+    det = np.linalg.det(det)
+    return np.degrees(math.atan2(det, dot))
+
+
+def get_dji_meta(filepath: str) -> dict:
+    """
+     Returns a dict with DJI-specific metadata stored in the XMB portion of the image
+     @param filepath: filepath to referenced image with DJI formatted meta-data
+     @returns dictionary with metadata tags
+     """
+
+    # list of metadata tags
+    djimeta = ["AbsoluteAltitude", "RelativeAltitude", "GimbalRollDegree", "GimbalYawDegree", \
+               "GimbalPitchDegree", "FlightRollDegree", "FlightYawDegree", "FlightPitchDegree"]
+
+    # read file in binary format and look for XMP metadata portion
+    fd = open(filepath, 'rb')
+    d = fd.read()
+    xmp_start = d.find(b'<x:xmpmeta')
+    xmp_end = d.find(b'</x:xmpmeta')
+
+    # convert bytes to string
+    xmp_b = d[xmp_start:xmp_end + 12]
+    xmp_str = xmp_b.decode()
+
+    fd.close()
+
+    # parse the XMP string to grab the values
+    xmp_dict = {}
+    for m in djimeta:
+        istart = xmp_str.find(m)
+        ss = xmp_str[istart:istart + len(m) + 10]
+        val = float(ss.split('"')[1])
+        xmp_dict.update({m: val})
+
+    return xmp_dict
 
 class ImagesMeta:
     def __init__(self, file):
@@ -53,6 +112,7 @@ class ImagesMeta:
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
         R = np.linalg.inv(R)
         return compose_44(R, self.t_vec[idx])
+
 
 def compose_44(r, t):
     return np.vstack((np.hstack((np.reshape(r, (3, 3)), np.reshape(t, (3, 1)))), np.array([0, 0, 0, 1])))

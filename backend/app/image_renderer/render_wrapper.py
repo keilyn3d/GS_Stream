@@ -63,10 +63,15 @@ class GS_Model():
 
         if config["images_txt_path"] is not None:
             self.images = ImagesMeta(config["images_txt_path"])
-            self.images_files = config["images_files"]
-            self.images_thumbnails = config["images_files_thumbnails"]
+            self.images_files = config["images_dir"]
+            self.images_thumbnails = config["images_dir_thumbnails"]
 
-        self.world2custom = np.array(config["world2custom"])
+        self.p1 = np.array(config["alt_and_heading"]["gnd_points"]["p1"])
+        self.v1 = np.array(config["alt_and_heading"]["gnd_vectors"]["v1"])
+        self.n = np.array(config["alt_and_heading"]["gnd_normal"])
+        self.alt_slope = config["alt_and_heading"]["altitude_model"]["altitude_slope"]
+        self.alt_intercept = config["alt_and_heading"]["altitude_model"]["altitude_intercept"]
+        self.heading_offset = config["alt_and_heading"]["heading_offset"]
 
         # First Set GPU Context (i.e., we can put different models on different GPUs if needed)
         device = torch.device(device)
@@ -79,6 +84,24 @@ class GS_Model():
 
         bg_color = [1, 1, 1]
         self.background = torch.tensor(bg_color, dtype=torch.float32, device=device)
+
+    def get_flight_params(self, R, T):
+        if self.alt_slope == "NA":
+            altitude = "NA"
+            heading = "NA"
+        else:
+            z_vec = R[:, -1]
+            C = np.matmul(-R, T)  # The imagesMeta returns the inv(R) so C = -inv(R)*T in our case its just -R*T
+            altitude = self.alt_slope * pt_2_plane_dist(C, self.p1, self.n) + self.alt_intercept
+            heading = r_2_yaw(z_vec, self.v1, self.n)
+            heading = heading + self.heading_offset
+            if heading < 0:
+                heading = 360 + heading
+            else:
+                if heading > 360:
+                    heading = heading - 360
+
+        return altitude, heading
 
     def render_view(self, cam: DummyCamera, save: bool = False, out_path: str = "./test.jpg"):
         """
