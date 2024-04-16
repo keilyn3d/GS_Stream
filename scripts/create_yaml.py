@@ -2,16 +2,18 @@
 # This script is used to generate a config.yaml for a project.
 # Pre-requisite: Sparse model created using Colmap format.
 #
-import glob, os
-from os import path
-from scipy import stats
 import argparse
-from ruamel.yaml import YAML
-from sklearn.linear_model import LinearRegression
-from scipy.spatial.transform import Rotation
-import numpy as np
+import glob
 import math
+import os
+from os import path
+
+import numpy as np
 from PIL import Image
+from ruamel.yaml import YAML
+from scipy import stats
+from scipy.spatial.transform import Rotation
+from sklearn.linear_model import LinearRegression
 
 
 def compose_44(r, t):
@@ -158,76 +160,92 @@ def create_thumbnails(images_dir: str, thumbnails_dir: str, max_dim: int = 500):
 def main_dji(args):
     create_thumbnails(args.images_dir, args.images_dir_thumbnails, 250)
 
-    points = read_gnd_points(args.plane_points_file)
+    if args.dji:
+        points = read_gnd_points(args.plane_points_file)
 
-    p1 = points[0]
-    p2 = points[1]
-    p3 = points[2]
+        p1 = points[0]
+        p2 = points[1]
+        p3 = points[2]
 
-    # These two vectors are in the plane
-    v1 = p3 - p1
-    v2 = p2 - p1
+        # These two vectors are in the plane
+        v1 = p3 - p1
+        v2 = p2 - p1
 
-    # the cross product is a vector normal to the plane
-    cp = np.cross(v1, v2)
-    cp = cp / np.linalg.norm(cp)
+        # the cross product is a vector normal to the plane
+        cp = np.cross(v1, v2)
+        cp = cp / np.linalg.norm(cp)
 
-    imagesMeta = ImagesMeta(args.images_txt_path)
-    elev = []
-    yaw = []
-    plane_dist = []
-    r_yaw = []
-    for image in imagesMeta.files:
-        elev.append(get_dji_meta(path.join(args.images_dir, image))["RelativeAltitude"])
-        yaw.append(get_dji_meta(path.join(args.images_dir, image))["GimbalYawDegree"])  # assume this is real
-        R, T = decompose_44(imagesMeta.get_pose_by_filename(image))
-        z_vec = R[:, -1]
-        C = np.matmul(-R, T)  # The imagesMeta returns the inv(R) so C = -inv(R)*T in our case its just -R*T
-        plane_dist.append(pt_2_plane_dist(C, p1, cp))
-        r_yaw.append(r_2_yaw(z_vec, v1, cp))
+        imagesMeta = ImagesMeta(args.images_txt_path)
+        elev = []
+        yaw = []
+        plane_dist = []
+        r_yaw = []
+        for image in imagesMeta.files:
+            elev.append(get_dji_meta(path.join(args.images_dir, image))["RelativeAltitude"])
+            yaw.append(get_dji_meta(path.join(args.images_dir, image))["GimbalYawDegree"])  # assume this is real
+            R, T = decompose_44(imagesMeta.get_pose_by_filename(image))
+            z_vec = R[:, -1]
+            C = np.matmul(-R, T)  # The imagesMeta returns the inv(R) so C = -inv(R)*T in our case its just -R*T
+            plane_dist.append(pt_2_plane_dist(C, p1, cp))
+            r_yaw.append(r_2_yaw(z_vec, v1, cp))
 
-    # elev = slope_alt * plane_dist + intercept_alt
-    plane_dist = np.array(plane_dist).reshape(-1, 1)
-    elev = np.array(elev).reshape(-1, 1)
-    alt_model = LinearRegression(fit_intercept=False)
-    alt_model.fit(plane_dist, elev)
-    slope_alt = alt_model.coef_
-    intercept_alt = alt_model.intercept_
-    r_alt = alt_model.score(plane_dist, elev)
+        # elev = slope_alt * plane_dist + intercept_alt
+        plane_dist = np.array(plane_dist).reshape(-1, 1)
+        elev = np.array(elev).reshape(-1, 1)
+        alt_model = LinearRegression(fit_intercept=False)
+        alt_model.fit(plane_dist, elev)
+        slope_alt = alt_model.coef_
+        intercept_alt = alt_model.intercept_
+        r_alt = alt_model.score(plane_dist, elev)
 
-    yaw = np.array(yaw)
-    r_yaw = np.array(r_yaw)
-    yaw = np.where(yaw < 0, 360 + yaw, yaw)
-    r_yaw = np.where(r_yaw < 0, 360 + r_yaw, r_yaw)
+        yaw = np.array(yaw)
+        r_yaw = np.array(r_yaw)
+        yaw = np.where(yaw < 0, 360 + yaw, yaw)
+        r_yaw = np.where(r_yaw < 0, 360 + r_yaw, r_yaw)
 
-    r_yaw_offset = yaw - r_yaw
-    r_yaw_offset = np.where(r_yaw_offset < -180, r_yaw_offset + 360, r_yaw_offset)
-    r_yaw_offset = np.where(r_yaw_offset > 180, r_yaw_offset - 360, r_yaw_offset)
+        r_yaw_offset = yaw - r_yaw
+        r_yaw_offset = np.where(r_yaw_offset < -180, r_yaw_offset + 360, r_yaw_offset)
+        r_yaw_offset = np.where(r_yaw_offset > 180, r_yaw_offset - 360, r_yaw_offset)
 
-    # yaw = r_yaw + mean_offset
-    _, _, mean_offset, var_offset, _, kurtosis_offset = stats.describe(r_yaw_offset)
+        # yaw = r_yaw + mean_offset
+        _, _, mean_offset, var_offset, _, kurtosis_offset = stats.describe(r_yaw_offset)
 
-    data = {
-        "ply_path": path.abspath(args.ply_path),
-        "images_txt_path": path.abspath(args.images_txt_path),
-        "images_dir": path.abspath(args.images_dir),
-        "images_dir_thumbnails": path.abspath(args.images_dir_thumbnails),
-        "alt_and_heading": {
-            "gnd_points": {"p1": p1.tolist(), "p2": p2.tolist(), "p3": p3.tolist()},
-            "gnd_vectors": {"v1": v1.tolist(), "v2": v2.tolist()},
-            "gnd_normal": cp.tolist(),
-            "altitude_model": {"altitude_slope": float(slope_alt), "altitude_intercept": float(intercept_alt)},
-            "altitude_r": float(r_alt),
-            "heading_offset": float(mean_offset),
-            "heading_error": {"heading_variance": float(var_offset), "heading_kurtosis": float(kurtosis_offset)}
+        data = {
+            "ply_path": path.abspath(args.ply_path),
+            "images_txt_path": path.abspath(args.images_txt_path),
+            "images_dir": path.abspath(args.images_dir),
+            "images_dir_thumbnails": path.abspath(args.images_dir_thumbnails),
+            "alt_and_heading": {
+                "gnd_points": {"p1": p1.tolist(), "p2": p2.tolist(), "p3": p3.tolist()},
+                "gnd_vectors": {"v1": v1.tolist(), "v2": v2.tolist()},
+                "gnd_normal": cp.tolist(),
+                "altitude_model": {"altitude_slope": float(slope_alt), "altitude_intercept": float(intercept_alt)},
+                "altitude_r": float(r_alt),
+                "heading_offset": float(mean_offset),
+                "heading_error": {"heading_variance": float(var_offset), "heading_kurtosis": float(kurtosis_offset)}
+            }
         }
-    }
+    else:
+        data = {
+            "ply_path": path.abspath(args.ply_path),
+            "images_txt_path": path.abspath(args.images_txt_path),
+            "images_dir": path.abspath(args.images_dir),
+            "images_dir_thumbnails": path.abspath(args.images_dir_thumbnails),
+            "alt_and_heading": {
+                "gnd_points": {"p1": "NA", "p2": "NA", "p3": "NA"},
+                "gnd_vectors": {"v1": "NA", "v2": "NA"},
+                "gnd_normal": "NA",
+                "altitude_model": {"altitude_slope": "NA", "altitude_intercept": "NA"},
+                "altitude_r": "NA",
+                "heading_offset": "NA",
+                "heading_error": {"heading_variance": "NA", "heading_kurtosis": "NA"}
+            }
+        }
 
     with open(path.join(args.config_path, 'config.yaml'), 'w') as outfile:
         yaml = YAML()
         yaml.default_flow_style = False
         yaml.dump(data, outfile)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -242,5 +260,6 @@ if __name__ == '__main__':
     parser.add_argument('-gnd_pts', "--plane_points_file", type=str,
                         help="path to <projectid>_plane_points.txt file", default="../output/RCH/plane_points.txt")
     parser.add_argument('-config_path', "--config_path", type=str, help="path to save config file")
+    parser.add_argument('-dji', "--dji", type=bool, help="Is DJI images?", default=True)
     args = parser.parse_args()
     main_dji(args)
