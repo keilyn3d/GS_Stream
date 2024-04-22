@@ -1,12 +1,14 @@
 from flask import Blueprint, jsonify
 from ..model_config.model_config_fetcher import get_model_config_data
+from ..model_config.model_config_fetcher import get_model_ids_and_names
 
 api_blueprint = Blueprint('api', __name__)
 
 @api_blueprint.route('/codes', methods=['GET'])
 def get_model_ids():
-    model_ids = ['model1']  
-    return jsonify(model_ids)
+    model_ids_and_names = get_model_ids_and_names()
+    reseponse = [{'id': id, 'model_name': name} for id, name in model_ids_and_names]
+    return jsonify(reseponse)
 
 
 @api_blueprint.route('/models/<model_id>/config', methods=['GET'])

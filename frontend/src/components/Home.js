@@ -104,8 +104,8 @@ const Home = () => {
             <option value="">Please select a model</option>
 
             {allModels.map((model) => (
-              <option key={model} value={model}>
-                {model}
+              <option key={model.id} value={model.id}>
+                {model.model_name}
               </option>
             ))}
           </select>
@@ -119,8 +119,8 @@ const Home = () => {
             <option value="">Please select a model</option>
 
             {allModels.map((model) => (
-              <option key={model} value={model}>
-                {model}
+              <option key={model.id} value={model.id}>
+                {model.model_name}
               </option>
             ))}
           </select>

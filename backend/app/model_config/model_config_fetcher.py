@@ -1,3 +1,15 @@
+models = [
+    {'id':1, 'name': 'RCH', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
+    {'id':2, 'name': 'UW_tower', 'config_path':'/home/ubuntu/projects/GS_Stream/data/UW_tower/config.yaml'},
+    # {'id':3, 'name': 'CViSS', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
+    # {'id':4, 'name': 'st_comb/st_1', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
+    # {'id':5, 'name': 'st_comb/st_2', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
+]
+
+def get_model_ids_and_names():
+    model_ids_and_names = [(model['id'], model['name']) for model in models]
+    return model_ids_and_names
+
 def get_model_config_data(model_id):
     if model_id == 'model1':
         return 'Initial data for model1'
