@@ -10,14 +10,19 @@ import StepControl from './StepControl';
 
 const DualView = () => {
   let userName = 'defaultUserName';
-  let leftModel = 'defaultLeftModel';
-  let rightModel = 'defaultRightModel';
+  let leftModelId = 0;
+  let rightModelId = 0;
+  let leftModelName = 'defaultLeftModelName';
+  let rightModelName = 'defaultRightModelName';
 
   const location = useLocation();
   if (location && location.state) {
     userName = location.state.userName || userName;
-    leftModel = location.state.selectedModel || leftModel;
-    rightModel = location.state.selectedModelForComparison || rightModel;
+    leftModelId = location.state.selectedModelId || leftModelId;
+    rightModelId = location.state.selectedModelIdForComparison || rightModelId;
+    leftModelName = location.state.selectedModelName || leftModelName;
+    rightModelName =
+      location.state.selectedModelNameForComparison || rightModelName;
   }
 
   // Socket
@@ -48,8 +53,8 @@ const DualView = () => {
 
     socketRef.current.on('connect', () => {
       socketRef.current.emit('set_user_name', userName);
-      socketRef.current.emit('get_init_image', leftModel);
-      socketRef.current.emit('get_init_image', rightModel);
+      socketRef.current.emit('get_init_image', leftModelId);
+      socketRef.current.emit('get_init_image', rightModelId);
       console.log('Connected to Socket.IO server');
     });
 
@@ -115,10 +120,10 @@ const DualView = () => {
       return `right-${numberPart + 1}`;
     });
     if (socketRef.current) {
-      socketRef.current.emit('get_init_image', leftModel);
-      socketRef.current.emit('get_init_image', rightModel);
-      socketRef.current.emit('reset_pose', leftModel);
-      socketRef.current.emit('reset_pose', rightModel);
+      socketRef.current.emit('get_init_image', leftModelId);
+      socketRef.current.emit('get_init_image', rightModelId);
+      socketRef.current.emit('reset_pose', leftModelId);
+      socketRef.current.emit('reset_pose', rightModelId);
     }
     setStep(initStepValue);
   };
@@ -149,8 +154,8 @@ const DualView = () => {
     <div className="content">
       <DualViewHeader
         userName={userName}
-        leftModel={leftModel}
-        rightModel={rightModel}
+        leftModelName={leftModelName}
+        rightModelName={rightModelName}
       />
       <div style={{ display: 'flex' }}>
         <CanvasContainer

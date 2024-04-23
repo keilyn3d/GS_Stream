@@ -11,11 +11,13 @@ import StepControl from './StepControl';
 const SingleView = () => {
   const location = useLocation();
   let userName = 'defaultUserName';
-  let selectedModel = 'defaultSelectedModel';
+  let selectedModelId = 0;
+  let selectedModelName = 'defaultSelectedModel';
 
   if (location && location.state) {
     userName = location.state.userName || userName;
-    selectedModel = location.state.selectedModel || selectedModel;
+    selectedModelId = location.state.selectedModelId || selectedModelId;
+    selectedModelName = location.state.selectedModelName || selectedModelName;
   }
 
   const lastKeyPressedTime = useRef(0);
@@ -35,7 +37,7 @@ const SingleView = () => {
 
     socketRef.current.on('connect', () => {
       socketRef.current.emit('set_user_name', userName);
-      socketRef.current.emit('get_init_image', selectedModel);
+      socketRef.current.emit('get_init_image', selectedModelId);
       console.log('Connected to Socket.IO server');
     });
 
@@ -91,8 +93,8 @@ const SingleView = () => {
   const handleResetClick = () => {
     setResetKey((prevKey) => prevKey + 1);
     if (socketRef.current) {
-      socketRef.current.emit('get_init_image', selectedModel);
-      socketRef.current.emit('reset_pose', selectedModel);
+      socketRef.current.emit('get_init_image', selectedModelId);
+      socketRef.current.emit('reset_pose', selectedModelId);
     }
     setStep(initStepValue);
   };
@@ -121,7 +123,10 @@ const SingleView = () => {
 
   return (
     <div className="content">
-      <SingleViewHeader userName={userName} selectedModel={selectedModel} />
+      <SingleViewHeader
+        userName={userName}
+        selectedModelName={selectedModelName}
+      />
       <CanvasContainer
         containerId="main"
         mainCanvasId="main"

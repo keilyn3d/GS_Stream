@@ -8,8 +8,11 @@ const Home = () => {
   const backendAddress = process.env.REACT_APP_BACKEND_URL;
 
   const [userName, setUserName] = useState('');
-  const [selectedModel, setSelectedModel] = useState('');
-  const [selectedModelForComparison, setSelectedModelForComparison] =
+  const [selectedModelId, setSelectedModelId] = useState('');
+  const [selectedModelIdForComparison, setSelectedModelIdForComparison] =
+    useState('');
+  const [selectedModelName, setSelectedModelName] = useState('');
+  const [selectedModelNameForComparison, setSelectedModelNameForComparison] =
     useState('');
   const [allModels, setAllModels] = useState([]);
 
@@ -26,7 +29,7 @@ const Home = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!selectedModel) {
+    if (!selectedModelId) {
       // Notify the user (e.g., display an alert message)
       // Stop further processing and exit the function
       alert('Please select a code.');
@@ -36,7 +39,7 @@ const Home = () => {
     try {
       // Request the selected code from the server
       const response = await fetch(
-        `${backendAddress}/api/models/${selectedModel}/config`,
+        `${backendAddress}/api/models/${selectedModelId}/config`,
         {
           method: 'GET', // or POST, depending on server implementation
           headers: {
@@ -56,12 +59,14 @@ const Home = () => {
       // Save the initial values received from the server to state or perform other logic
       // For example: update state, save to local storage, pass to other components, etc.
 
-      if (selectedModel && selectedModelForComparison) {
+      if (selectedModelId && selectedModelIdForComparison) {
         navigate('/dual-view', {
           state: {
             userName,
-            selectedModel,
-            selectedModelForComparison,
+            selectedModelId,
+            selectedModelIdForComparison,
+            selectedModelName,
+            selectedModelNameForComparison,
             config,
           },
         });
@@ -69,7 +74,8 @@ const Home = () => {
         navigate('/single-view', {
           state: {
             userName,
-            selectedModel,
+            selectedModelId,
+            selectedModelName,
             config,
           },
         });
@@ -98,8 +104,14 @@ const Home = () => {
         <div className="join">
           <select
             name="model"
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
+            value={selectedModelId}
+            onChange={(e) => {
+              const selectedIndex = e.target.options.selectedIndex;
+              const selectedText = e.target.options[selectedIndex].text;
+
+              setSelectedModelId(e.target.value);
+              setSelectedModelName(selectedText);
+            }}
           >
             <option value="">Please select a model</option>
 
@@ -112,9 +124,15 @@ const Home = () => {
 
           <select
             name="model-for-comparison"
-            value={selectedModelForComparison}
-            onChange={(e) => setSelectedModelForComparison(e.target.value)}
-            disabled={!selectedModel}
+            value={selectedModelIdForComparison}
+            onChange={(e) => {
+              const selectedIndex = e.target.options.selectedIndex;
+              const selectedText = e.target.options[selectedIndex].text;
+
+              setSelectedModelIdForComparison(e.target.value);
+              setSelectedModelNameForComparison(selectedText);
+            }}
+            disabled={!selectedModelId}
           >
             <option value="">Please select a model</option>
 
