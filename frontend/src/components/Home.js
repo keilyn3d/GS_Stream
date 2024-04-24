@@ -26,62 +26,57 @@ const Home = () => {
   }, []);
   console.log(allModels);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!selectedModelId) {
-      // Notify the user (e.g., display an alert message)
-      // Stop further processing and exit the function
-      alert('Please select a code.');
-      return;
-    }
-
+  const fetchConfig = async (modelId) => {
     try {
-      // Request the selected code from the server
-      const response = await fetch(
-        `${backendAddress}/api/models/${selectedModelId}/config`,
-        {
-          method: 'GET', // or POST, depending on server implementation
-          headers: {
-            // Set headers if necessary
-            'Content-Type': 'application/json',
-          },
-          // body: JSON.stringify({ code }) // for POST requests
+      const apiUrl = selectedModelIdForComparison
+        ? `${backendAddress}/api/models/configs?ids=${selectedModelId},${selectedModelIdForComparison}`
+        : `${backendAddress}/api/models/${selectedModelId}/config`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       if (!response.ok) {
         throw new Error('Server response was not ok');
       }
 
-      const config = await response.json();
-
-      // Save the initial values received from the server to state or perform other logic
-      // For example: update state, save to local storage, pass to other components, etc.
-
-      if (selectedModelId && selectedModelIdForComparison) {
-        navigate('/dual-view', {
-          state: {
-            userName,
-            selectedModelId,
-            selectedModelIdForComparison,
-            selectedModelName,
-            selectedModelNameForComparison,
-            config,
-          },
-        });
-      } else {
-        navigate('/single-view', {
-          state: {
-            userName,
-            selectedModelId,
-            selectedModelName,
-            config,
-          },
-        });
-      }
+      return await response.json();
     } catch (error) {
-      console.error('Fetching initial values failed', error);
+      console.error('Fetching config failed', error);
+      throw error; // Ensure the error is propagated if necessary
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!selectedModelId) {
+      alert('Please select a model.');
+      return;
+    }
+
+    try {
+      const config = await fetchConfig(selectedModelId);
+      const route = selectedModelIdForComparison
+        ? '/dual-view'
+        : '/single-view';
+      const state = {
+        userName,
+        selectedModelId,
+        selectedModelName,
+        config,
+      };
+
+      if (selectedModelIdForComparison) {
+        state.selectedModelIdForComparison = selectedModelIdForComparison;
+        state.selectedModelNameForComparison = selectedModelNameForComparison;
+      }
+      navigate(route, { state });
+    } catch (error) {
+      console.error('Error handling submit', error);
     }
   };
 

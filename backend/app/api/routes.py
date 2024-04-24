@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from ..model_config.model_config_fetcher import get_model_config_data
 from ..model_config.model_config_fetcher import get_model_ids_and_names
 from ..model_config.model_config_fetcher import set_model
@@ -18,3 +18,24 @@ def get_initial_data(model_id):
     # initial_data = model.get_model_config_data()
     initial_data = get_model_config_data(model_id)
     return jsonify(initial_data)
+
+@api_blueprint.route('/models/configs', methods=['GET'])
+def get_multiple_model_data():
+    model_ids = request.args.get('ids')
+
+    if not model_ids:
+        return jsonify({'error': 'No model IDs provided'}), 400
+
+    model_ids = model_ids.split(',')
+
+    results = []
+    for model_id in model_ids:
+        set_model(model_id)
+
+        model_data = get_model_config_data(model_id)
+        if model_data:
+            results.append(model_data)
+        else:
+            results.append({'model_id': model_id, 'error': 'Data not found'})
+
+    return jsonify(results)
