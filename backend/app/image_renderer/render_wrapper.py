@@ -5,6 +5,9 @@ from gaussian_renderer import render
 import torchvision
 from gaussian_renderer import GaussianModel
 from .camera_pos_utils import *
+from . import camera_pos_utils as camera
+import io
+
 
 from utils.graphics_utils import getWorld2View2, getProjectionMatrix
 
@@ -55,8 +58,10 @@ class DummyCamera:
 
 
 class GS_Model():
-    def __init__(self, config_path: str, device: str = "cuda:0"):
+    def __init__(self, config_path: str, R_mat: str, T_vec: str, device: str = "cuda:0", ):
         self.images = None
+        self._R_mat = np.array(eval(R_mat))
+        self._T_vec = np.array(eval(T_vec))
 
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -119,6 +124,38 @@ class GS_Model():
             result.save(out_path)
 
         return result
+    
+    def init_pose(self):
+        print(f"wrapper: {self._R_mat}, {self._T_vec}")
+        init_pose = camera.compose_44(self._R_mat, self._T_vec)
+        return init_pose
+    
+    def get_initial_camera_pose(self, R_mat, T_vec):
+        init_pose = camera.compose_44(R_mat, T_vec)
+        R, T = camera.decompose_44(np.array(init_pose))
+        return R, T
+
+    def configure_camera(self, R, T, width=800, height=600, fovx=1.4261863218, fovy=1.150908963):
+        return DummyCamera(R=R, T=T, W=width, H=height, FoVx=fovx, FoVy=fovy)
+    
+    def get_init_image(self):
+        print("!!!!!!!!!!!!")
+        R, T = self.get_initial_camera_pose(self._R_mat, self._T_vec)  # Calculate the camera pose
+        cam = self.configure_camera(R, T)  # Configure the camera
+        pil_image = self.render_view(cam)    
+        image_data = io.BytesIO()
+        pil_image.save(image_data, "JPEG")
+        image_data.seek(0)  # Move the cursor to the initial position for reading the image data
+        return image_data
+    
+    def render_model_image(self, camera):
+        # Render the model image using the provided camera
+        pil_image = self.render_view(camera)
+        image_data = io.BytesIO()
+        pil_image.save(image_data, "JPEG")
+        image_data.seek(0)  # Move the cursor to the initial position for reading the image data
+        return image_data
+        
 
 
 if __name__ == '__main__':

@@ -4,13 +4,16 @@ from flask_socketio import SocketIO, emit
 from ..image_renderer.image_creator import *
 from ..image_renderer.render_wrapper import decompose_44
 import logging
+import os
 
 user_name = ''
 user_states = {}
 
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+from ..model_config import model_config_fetcher as fetcher
 
 def configure_socketio(socketio: SocketIO):
     @socketio.on('connect')
@@ -21,8 +24,8 @@ def configure_socketio(socketio: SocketIO):
         emit('response', {'message': 'Connected to server'})
 
     def set_user_init_pose():
-        user_states[request.sid]['init_pose'] = get_model_init_pose()
-        user_states[request.sid]['current_pose'] = get_model_init_pose()
+        user_states[request.sid]['init_pose'] = fetcher.gs_model.init_pose()
+        user_states[request.sid]['current_pose'] = fetcher.gs_model.init_pose()
 
     @socketio.on('set_user_name')
     def handle_get_user_name(name):
@@ -42,7 +45,7 @@ def configure_socketio(socketio: SocketIO):
 
     @socketio.on('get_init_image')
     def handle_get_init_image(model_id):
-        init_image = get_model_init_image()
+        init_image = fetcher.gs_model.get_init_image()
         base64_img = make_base64_img(init_image)
         print(f'Message to {user_name} for {model_id} model: get_init_image')
         emit('set_client_init_image', base64_img)
@@ -67,16 +70,16 @@ def configure_socketio(socketio: SocketIO):
 
 def calculate_altitude(current_pose):
     R, T = decompose_44(np.array(current_pose))
-    altitude, heading = model.get_flight_params(R, T)
+    altitude, heading = fetcher.gs_model.get_flight_params(R, T)
     logging.info(f'Altitude: {altitude} and Heading: {heading}')
     emit("flight_params", {'altitude': altitude, 'heading': heading})
 
 
 def handle_space_key(current_pose):
-    filenames = model.images.get_closest_n(pose=current_pose, n=3)
+    filenames = fetcher.gs_model.images.get_closest_n(pose=current_pose, n=3)
     print("The closest images are: " + ', '.join(str(x) for x in filenames))
     closest_images = {}
-    filepath = model.images_thumbnails
+    filepath = fetcher.gs_model.images_thumbnails
     for file in filenames:
         with open(os.path.join(filepath, file), 'rb') as f:
             img_data = f.read()
