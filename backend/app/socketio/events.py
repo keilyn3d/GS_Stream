@@ -43,7 +43,11 @@ def configure_socketio(socketio: SocketIO):
         init_image = model.get_init_image()
         base64_img = make_base64_img(init_image)
         print(f'Message to {user_name} for {model_id} model: get_init_image')
-        emit('set_client_init_image', base64_img)
+        data = {
+            'modelId': model_id,
+            'image': base64_img
+        }
+        emit('set_client_init_image', data)
 
     @socketio.on('reset_pose')
     def handle_reset_pose(model_id):
@@ -76,13 +80,14 @@ def configure_socketio(socketio: SocketIO):
             print(f"Received model IDs: {model_ids}")
             print(f"Number of models received: {len(model_ids)}")
         for model_id in model_ids:
+            print("f{model_id}!!!!!!!!!!!!!!!!!!!!!!!!!")
             fetcher.set_model(model_id)
 
     # function for socket            
     def set_user_init_pose():
         user_models = user_states.setdefault(request.sid, {})
         for model_id in model_ids:
-            model = fetcher.get_model(model_id)  # 각 모델 ID에 따라 모델 인스턴스를 가져옴
+            model = fetcher.get_model(model_id)
             if model:
                 user_models[model_id] = {
                     'init_pose': model.init_pose(),
@@ -119,7 +124,11 @@ def handle_other_keys(model_id, key, step, current_pose):
     base64_img = make_base64_img(img_data)
     user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
     print(f'Message to {user_name}: set_client_main_image')
-    emit('set_client_main_image', base64_img)
+    data = {
+            'modelId': model_id,
+            'image': base64_img
+        }
+    emit('set_client_main_image', data)
 
 def make_base64_img(image):
     image.seek(0)

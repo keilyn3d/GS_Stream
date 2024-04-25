@@ -48,14 +48,14 @@ const SingleView = () => {
       socketRef.current.emit('get_init_image', selectedModelId);
     });
 
-    socketRef.current.on('set_client_init_image', (base64Img) => {
+    socketRef.current.on('set_client_init_image', (data) => {
       console.log('Received init image');
-      setMainImage(base64Img);
+      setMainImage(data.image);
     });
 
-    socketRef.current.on('set_client_main_image', (base64Img) => {
+    socketRef.current.on('set_client_main_image', (data) => {
       console.log('Received main image');
-      setMainImage(base64Img);
+      setMainImage(data.image);
     });
 
     socketRef.current.on('nnImg', (data) => {
