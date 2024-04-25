@@ -36,13 +36,16 @@ const SingleView = () => {
     }
 
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('set_user_name', userName);
-      socketRef.current.emit('get_init_image', selectedModelId);
+      socketRef.current.emit('set_user_data', {
+        unserName: userName,
+        modelIds: [selectedModelId],
+      });
       console.log('Connected to Socket.IO server');
     });
 
     socketRef.current.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
+      socketRef.current.emit('get_init_image', selectedModelId);
     });
 
     socketRef.current.on('set_client_init_image', (base64Img) => {

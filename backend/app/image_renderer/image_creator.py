@@ -45,11 +45,11 @@ def get_changed_cam(pose, key, step):
     cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963, C2C_Rot=C2C_Rot, C2C_T=C2C_T)
     return cam
 
-def get_model_image(pose, key, step):
-    cam = get_changed_cam(pose, key, step)
-    img_data = fetcher.gs_model.render_model_image(cam)  # Render and save the model image  
-    return img_data
+# def get_model_image(pose, key, step):
+#     cam = get_changed_cam(pose, key, step)
+#     img_data = fetcher.gs_model.render_model_image(cam)  # Render and save the model image  
+#     return img_data
 
-def get_model_changed_pose(pose, key, step):
-    cam = get_changed_cam(pose, key, step)
-    return cam.get_new_pose()
+# def get_model_changed_pose(pose, key, step):
+#     cam = get_changed_cam(pose, key, step)
+#     return cam.get_new_pose()
