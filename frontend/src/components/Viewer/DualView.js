@@ -52,26 +52,29 @@ const DualView = () => {
     }
 
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('set_user_name', userName);
-      socketRef.current.emit('get_init_image', leftModelId);
-      socketRef.current.emit('get_init_image', rightModelId);
+      socketRef.current.emit('set_user_data', {
+        unserName: userName,
+        modelIds: [leftModelId, rightModelId],
+      });
       console.log('Connected to Socket.IO server');
     });
 
     socketRef.current.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
+      socketRef.current.emit('get_init_image', leftModelId);
+      socketRef.current.emit('get_init_image', rightModelId);
     });
 
-    socketRef.current.on('set_client_init_image', (base64Img) => {
+    socketRef.current.on('set_client_init_image', (data) => {
       console.log('Received init image');
-      setLeftMainImage(base64Img);
-      setRightMainImage(base64Img);
+      if (data.modelId === leftModelId) setLeftMainImage(data.image);
+      if (data.modelId === rightModelId) setRightMainImage(data.image);
     });
 
-    socketRef.current.on('set_client_main_image', (base64Img) => {
+    socketRef.current.on('set_client_main_image', (data) => {
       console.log('Received main image');
-      setLeftMainImage(base64Img);
-      setRightMainImage(base64Img);
+      if (data.modelId === leftModelId) setLeftMainImage(data.image);
+      if (data.modelId === rightModelId) setRightMainImage(data.image);
     });
 
     socketRef.current.on('nnImg', (data) => {
