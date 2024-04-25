@@ -37,7 +37,7 @@ const SingleView = () => {
 
     socketRef.current.on('connect', () => {
       socketRef.current.emit('set_user_data', {
-        unserName: userName,
+        userName: userName,
         modelIds: [selectedModelId],
       });
       console.log('Connected to Socket.IO server');

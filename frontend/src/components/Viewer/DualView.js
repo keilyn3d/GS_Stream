@@ -53,7 +53,7 @@ const DualView = () => {
 
     socketRef.current.on('connect', () => {
       socketRef.current.emit('set_user_data', {
-        unserName: userName,
+        userName: userName,
         modelIds: [leftModelId, rightModelId],
       });
       console.log('Connected to Socket.IO server');
