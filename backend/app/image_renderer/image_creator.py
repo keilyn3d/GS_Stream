@@ -2,8 +2,6 @@ import numpy as np
 from .render_wrapper import DummyCamera
 from . import camera_pos_utils as camera
 
-from ..model_config import model_config_fetcher as fetcher
-
 
 def configure_camera(R, T, width=800, height=600, fovx=1.4261863218, fovy=1.150908963):
     return DummyCamera(R=R, T=T, W=width, H=height, FoVx=fovx, FoVy=fovy)
@@ -44,12 +42,3 @@ def get_changed_cam(pose, key, step):
     R, T = camera.decompose_44(np.array(pose))
     cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963, C2C_Rot=C2C_Rot, C2C_T=C2C_T)
     return cam
-
-# def get_model_image(pose, key, step):
-#     cam = get_changed_cam(pose, key, step)
-#     img_data = fetcher.gs_model.render_model_image(cam)  # Render and save the model image  
-#     return img_data
-
-# def get_model_changed_pose(pose, key, step):
-#     cam = get_changed_cam(pose, key, step)
-#     return cam.get_new_pose()

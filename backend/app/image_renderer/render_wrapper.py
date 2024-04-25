@@ -139,7 +139,6 @@ class GS_Model():
         return DummyCamera(R=R, T=T, W=width, H=height, FoVx=fovx, FoVy=fovy)
     
     def get_init_image(self):
-        print("!!!!!!!!!!!!")
         R, T = self.get_initial_camera_pose(self._R_mat, self._T_vec)  # Calculate the camera pose
         cam = self.configure_camera(R, T)  # Configure the camera
         pil_image = self.render_view(cam)    

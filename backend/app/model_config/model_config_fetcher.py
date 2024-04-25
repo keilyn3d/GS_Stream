@@ -72,15 +72,11 @@ def get_model_ids_and_names():
 models = {}
 
 def set_model(model_id):
-    print("=========")
-    print(models)
     try:
         config = find_model_config(model_id)
         print("Model config path:", config.config_path)
         new_model = GS_Model(config_path=config.config_path, R_mat=config.R_mat, T_vec=config.T_vec)
         models[model_id] = new_model  
-        print(models)
-        print("=========")
     except ValueError as e:
         print(e)    
 
