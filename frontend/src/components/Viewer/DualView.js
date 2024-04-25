@@ -57,12 +57,12 @@ const DualView = () => {
         modelIds: [leftModelId, rightModelId],
       });
       console.log('Connected to Socket.IO server');
+      socketRef.current.emit('get_init_image', leftModelId);
+      socketRef.current.emit('get_init_image', rightModelId);
     });
 
     socketRef.current.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
-      socketRef.current.emit('get_init_image', leftModelId);
-      socketRef.current.emit('get_init_image', rightModelId);
     });
 
     socketRef.current.on('set_client_init_image', (data) => {

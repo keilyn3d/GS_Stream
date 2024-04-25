@@ -5,7 +5,6 @@ from ..image_renderer.image_creator import *
 from ..image_renderer.render_wrapper import decompose_44
 import logging
 import os
-from ..model_config.model_config_fetcher import set_model
 from ..model_config import model_config_fetcher as fetcher
 
 
@@ -79,9 +78,6 @@ def configure_socketio(socketio: SocketIO):
             model_ids = data['modelIds']
             print(f"Received model IDs: {model_ids}")
             print(f"Number of models received: {len(model_ids)}")
-        for model_id in model_ids:
-            print("f{model_id}!!!!!!!!!!!!!!!!!!!!!!!!!")
-            fetcher.set_model(model_id)
 
     # function for socket            
     def set_user_init_pose():

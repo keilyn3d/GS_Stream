@@ -41,11 +41,11 @@ const SingleView = () => {
         modelIds: [selectedModelId],
       });
       console.log('Connected to Socket.IO server');
+      socketRef.current.emit('get_init_image', selectedModelId);
     });
 
     socketRef.current.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
-      socketRef.current.emit('get_init_image', selectedModelId);
     });
 
     socketRef.current.on('set_client_init_image', (data) => {
