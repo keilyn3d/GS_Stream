@@ -60,8 +60,8 @@ const SingleView = () => {
 
     socketRef.current.on('nnImg', (data) => {
       console.log('Received nnImages');
-      const entries = Object.entries(data);
-      setNnImages(entries.map(([, base64Img]) => base64Img));
+      const entries = Object.entries(data.images);
+      setNnImages(entries.map(([, image]) => image));
     });
 
     return () => {
@@ -95,11 +95,12 @@ const SingleView = () => {
 
   const handleResetClick = () => {
     setResetKey((prevKey) => prevKey + 1);
+    setStep(initStepValue);
+    setNnImages(['', '', '']);
     if (socketRef.current) {
       socketRef.current.emit('get_init_image', selectedModelId);
       socketRef.current.emit('reset_pose', selectedModelId);
     }
-    setStep(initStepValue);
   };
 
   const increaseStep = () => {

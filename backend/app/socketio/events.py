@@ -62,7 +62,7 @@ def configure_socketio(socketio: SocketIO):
         for model_id in model_ids:
             current_pose = user_states[request.sid][model_id]['current_pose']
             if key == ' ':
-                handle_space_key(current_pose)
+                handle_space_key(model_id, current_pose)
             else:
                 handle_other_keys(model_id, key, step, current_pose)
                 calculate_altitude(current_pose)
@@ -103,19 +103,22 @@ def calculate_altitude(current_pose):
         logging.info(f'Altitude: {altitude} and Heading: {heading}')
         emit("flight_params", {'altitude': altitude, 'heading': heading})
 
-def handle_space_key(current_pose):
-    for model_id in model_ids:
-        model = fetcher.get_model(model_id)
-        filenames = model.images.get_closest_n(pose=current_pose, n=3)
-        print("The closest images are: " + ', '.join(str(x) for x in filenames))
-        closest_images = {}
-        filepath = model.images_thumbnails
-        for file in filenames:
-            with open(os.path.join(filepath, file), 'rb') as f:
-                img_data = f.read()
-                # Encode img_data to base64
-                closest_images[file] = base64.b64encode(img_data).decode('utf-8')
-        emit("nnImg", closest_images)
+def handle_space_key(model_id, current_pose):
+    model = fetcher.get_model(model_id)
+    filenames = model.images.get_closest_n(pose=current_pose, n=3)
+    print("The closest images are: " + ', '.join(str(x) for x in filenames))
+    closest_images = {}
+    filepath = model.images_thumbnails
+    for file in filenames:
+        with open(os.path.join(filepath, file), 'rb') as f:
+            img_data = f.read()
+            # Encode img_data to base64
+            closest_images[file] = base64.b64encode(img_data).decode('utf-8')
+    data = {
+        'modelId': model_id,
+        'images': closest_images
+    }
+    emit("nnImg", data)
 
 
 def handle_other_keys(model_id, key, step, current_pose):

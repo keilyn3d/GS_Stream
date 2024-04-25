@@ -79,9 +79,12 @@ const DualView = () => {
 
     socketRef.current.on('nnImg', (data) => {
       console.log('Received nnImages');
-      const entries = Object.entries(data);
-      setLeftNnImages(entries.map(([, base64Img]) => base64Img));
-      setRightNnImages(entries.map(([, base64Img]) => base64Img));
+      const entries = Object.entries(data.images);
+
+      if (data.modelId === leftModelId)
+        setLeftNnImages(entries.map(([, image]) => image));
+      if (data.modelId === rightModelId)
+        setRightNnImages(entries.map(([, image]) => image));
     });
 
     return () => {
@@ -114,6 +117,10 @@ const DualView = () => {
   }, [step]);
 
   const handleResetClick = () => {
+    setStep(initStepValue);
+    setLeftNnImages(['', '', '']);
+    setRightNnImages(['', '', '']);
+
     setLeftResetKey((prevKey) => {
       const numberPart = parseInt(prevKey.split('-')[1], 10);
       return `left-${numberPart + 1}`;
@@ -128,7 +135,6 @@ const DualView = () => {
       socketRef.current.emit('reset_pose', leftModelId);
       socketRef.current.emit('reset_pose', rightModelId);
     }
-    setStep(initStepValue);
   };
 
   const increaseStep = () => {
