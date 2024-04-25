@@ -3,14 +3,28 @@ from ..image_renderer.render_wrapper import GS_Model
 
 model_config_data = [
     {
-        'id':'1', 
+        'id':'101', 
+        'name': 'st_comb/st_1', 
+        'config_path':'/home/ubuntu/projects/GS_Stream/output/st_comb/st_1/config.yaml',
+        'R_mat': '[[-0.9910061, -0.01236076, 0.13328557], [-0.01781009, 0.9990534, -0.03977152], [-0.13266692, -0.04178828, -0.99028504]]',
+        'T_vec': '[0.5559487, -0.13512671, 5.771629]'
+    },
+    {
+        'id':'102', 
+        'name': 'st_comb/st_2', 
+        'config_path':'/home/ubuntu/projects/GS_Stream/output/st_comb/st_2/config.yaml',
+        'R_mat': '[[-0.9910061, -0.01236076, 0.13328557], [-0.01781009, 0.9990534, -0.03977152], [-0.13266692, -0.04178828, -0.99028504]]',
+        'T_vec': '[0.5559487, -0.13512671, 5.771629]'
+    },
+    {
+        'id':'103', 
         'name': 'RCH', 
         'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml',
         'R_mat':'[[ 0.9347217, 0.01801105, 0.354922  ],[ 0.14371365, 0.89425105, -0.42386374],[-0.32502365, 0.44720212, 0.8332877 ]]',
         'T_vec':'[ 0.3057762, -0.8536954, 2.3952193]'        
     },
     {
-        'id':'2', 
+        'id':'104', 
         'name': 'UW_tower', 
         'config_path':'/home/ubuntu/projects/GS_Stream/output/UW_tower/config.yaml', 
         'R_mat':'[[-0.70811329, -0.21124761, 0.67375813],[0.16577646, 0.87778949, 0.4494483],[-0.68636268, 0.42995355, -0.58655453]]',
@@ -18,8 +32,6 @@ model_config_data = [
 
     },
     # {'id':3, 'name': 'CViSS', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
-    # {'id':4, 'name': 'st_comb/st_1', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
-    # {'id':5, 'name': 'st_comb/st_2', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
 ]
 
 class ModelConfig:
