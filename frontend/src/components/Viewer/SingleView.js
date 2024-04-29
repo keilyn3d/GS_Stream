@@ -11,11 +11,13 @@ import StepControl from './StepControl';
 const SingleView = () => {
   const location = useLocation();
   let userName = 'defaultUserName';
-  let selectedModel = 'defaultSelectedModel';
+  let selectedModelId = 0;
+  let selectedModelName = 'defaultSelectedModel';
 
   if (location && location.state) {
     userName = location.state.userName || userName;
-    selectedModel = location.state.selectedModel || selectedModel;
+    selectedModelId = location.state.selectedModelId || selectedModelId;
+    selectedModelName = location.state.selectedModelName || selectedModelName;
   }
 
   const lastKeyPressedTime = useRef(0);
@@ -34,29 +36,32 @@ const SingleView = () => {
     }
 
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('set_user_name', userName);
-      socketRef.current.emit('get_init_image', selectedModel);
+      socketRef.current.emit('set_user_data', {
+        userName: userName,
+        modelIds: [selectedModelId],
+      });
       console.log('Connected to Socket.IO server');
+      socketRef.current.emit('get_init_image', selectedModelId);
     });
 
     socketRef.current.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
     });
 
-    socketRef.current.on('set_client_init_image', (base64Img) => {
+    socketRef.current.on('set_client_init_image', (data) => {
       console.log('Received init image');
-      setMainImage(base64Img);
+      setMainImage(data.image);
     });
 
-    socketRef.current.on('set_client_main_image', (base64Img) => {
+    socketRef.current.on('set_client_main_image', (data) => {
       console.log('Received main image');
-      setMainImage(base64Img);
+      setMainImage(data.image);
     });
 
     socketRef.current.on('nnImg', (data) => {
       console.log('Received nnImages');
-      const entries = Object.entries(data);
-      setNnImages(entries.map(([, base64Img]) => base64Img));
+      const entries = Object.entries(data.images);
+      setNnImages(entries.map(([, image]) => image));
     });
 
     return () => {
@@ -90,11 +95,12 @@ const SingleView = () => {
 
   const handleResetClick = () => {
     setResetKey((prevKey) => prevKey + 1);
-    if (socketRef.current) {
-      socketRef.current.emit('get_init_image', selectedModel);
-      socketRef.current.emit('reset_pose', selectedModel);
-    }
     setStep(initStepValue);
+    setNnImages(['', '', '']);
+    if (socketRef.current) {
+      socketRef.current.emit('get_init_image', selectedModelId);
+      socketRef.current.emit('reset_pose', selectedModelId);
+    }
   };
 
   const increaseStep = () => {
@@ -121,7 +127,10 @@ const SingleView = () => {
 
   return (
     <div className="content">
-      <SingleViewHeader userName={userName} selectedModel={selectedModel} />
+      <SingleViewHeader
+        userName={userName}
+        selectedModelName={selectedModelName}
+      />
       <CanvasContainer
         containerId="main"
         mainCanvasId="main"

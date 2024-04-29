@@ -10,14 +10,19 @@ import StepControl from './StepControl';
 
 const DualView = () => {
   let userName = 'defaultUserName';
-  let leftModel = 'defaultLeftModel';
-  let rightModel = 'defaultRightModel';
+  let leftModelId = 0;
+  let rightModelId = 0;
+  let leftModelName = 'defaultLeftModelName';
+  let rightModelName = 'defaultRightModelName';
 
   const location = useLocation();
   if (location && location.state) {
     userName = location.state.userName || userName;
-    leftModel = location.state.selectedModel || leftModel;
-    rightModel = location.state.selectedModelForComparison || rightModel;
+    leftModelId = location.state.selectedModelId || leftModelId;
+    rightModelId = location.state.selectedModelIdForComparison || rightModelId;
+    leftModelName = location.state.selectedModelName || leftModelName;
+    rightModelName =
+      location.state.selectedModelNameForComparison || rightModelName;
   }
 
   // Socket
@@ -47,33 +52,39 @@ const DualView = () => {
     }
 
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('set_user_name', userName);
-      socketRef.current.emit('get_init_image', leftModel);
-      socketRef.current.emit('get_init_image', rightModel);
+      socketRef.current.emit('set_user_data', {
+        userName: userName,
+        modelIds: [leftModelId, rightModelId],
+      });
       console.log('Connected to Socket.IO server');
+      socketRef.current.emit('get_init_image', leftModelId);
+      socketRef.current.emit('get_init_image', rightModelId);
     });
 
     socketRef.current.on('response', (message) => {
       console.log('Received message from Socket.IO:', message);
     });
 
-    socketRef.current.on('set_client_init_image', (base64Img) => {
+    socketRef.current.on('set_client_init_image', (data) => {
       console.log('Received init image');
-      setLeftMainImage(base64Img);
-      setRightMainImage(base64Img);
+      if (data.modelId === leftModelId) setLeftMainImage(data.image);
+      if (data.modelId === rightModelId) setRightMainImage(data.image);
     });
 
-    socketRef.current.on('set_client_main_image', (base64Img) => {
+    socketRef.current.on('set_client_main_image', (data) => {
       console.log('Received main image');
-      setLeftMainImage(base64Img);
-      setRightMainImage(base64Img);
+      if (data.modelId === leftModelId) setLeftMainImage(data.image);
+      if (data.modelId === rightModelId) setRightMainImage(data.image);
     });
 
     socketRef.current.on('nnImg', (data) => {
       console.log('Received nnImages');
-      const entries = Object.entries(data);
-      setLeftNnImages(entries.map(([, base64Img]) => base64Img));
-      setRightNnImages(entries.map(([, base64Img]) => base64Img));
+      const entries = Object.entries(data.images);
+
+      if (data.modelId === leftModelId)
+        setLeftNnImages(entries.map(([, image]) => image));
+      if (data.modelId === rightModelId)
+        setRightNnImages(entries.map(([, image]) => image));
     });
 
     return () => {
@@ -106,6 +117,10 @@ const DualView = () => {
   }, [step]);
 
   const handleResetClick = () => {
+    setStep(initStepValue);
+    setLeftNnImages(['', '', '']);
+    setRightNnImages(['', '', '']);
+
     setLeftResetKey((prevKey) => {
       const numberPart = parseInt(prevKey.split('-')[1], 10);
       return `left-${numberPart + 1}`;
@@ -115,12 +130,11 @@ const DualView = () => {
       return `right-${numberPart + 1}`;
     });
     if (socketRef.current) {
-      socketRef.current.emit('get_init_image', leftModel);
-      socketRef.current.emit('get_init_image', rightModel);
-      socketRef.current.emit('reset_pose', leftModel);
-      socketRef.current.emit('reset_pose', rightModel);
+      socketRef.current.emit('get_init_image', leftModelId);
+      socketRef.current.emit('get_init_image', rightModelId);
+      socketRef.current.emit('reset_pose', leftModelId);
+      socketRef.current.emit('reset_pose', rightModelId);
     }
-    setStep(initStepValue);
   };
 
   const increaseStep = () => {
@@ -149,8 +163,8 @@ const DualView = () => {
     <div className="content">
       <DualViewHeader
         userName={userName}
-        leftModel={leftModel}
-        rightModel={rightModel}
+        leftModelName={leftModelName}
+        rightModelName={rightModelName}
       />
       <div style={{ display: 'flex' }}>
         <CanvasContainer
