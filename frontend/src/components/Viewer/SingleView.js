@@ -7,6 +7,7 @@ import SingleViewHeader from './SingleViewHeader';
 import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
 import StepControl from './StepControl';
+import InformationBox from './InformationBox';
 
 const SingleView = () => {
   const location = useLocation();
@@ -28,6 +29,8 @@ const SingleView = () => {
   const [resetKey, setResetKey] = useState(0);
   const [mainImage, setMainImage] = useState('');
   const [nnImages, setNnImages] = useState(['', '', '']);
+  const [elevation, setElevation] = useState(0);
+  const [heading, setHeading] = useState(0);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -62,6 +65,12 @@ const SingleView = () => {
       console.log('Received nnImages');
       const entries = Object.entries(data.images);
       setNnImages(entries.map(([, image]) => image));
+    });
+
+    socketRef.current.on('flight_params', (data) => {
+      console.log('Received flight_params');
+      setElevation(data.altitude);
+      setHeading(data.heading);
     });
 
     return () => {
@@ -101,6 +110,8 @@ const SingleView = () => {
       socketRef.current.emit('get_init_image', selectedModelId);
       socketRef.current.emit('reset_pose', selectedModelId);
     }
+    setElevation(0);
+    setHeading(0);
   };
 
   const increaseStep = () => {
@@ -141,6 +152,9 @@ const SingleView = () => {
         nnCanvasLocation="right"
         key={resetKey}
       />
+      <div className="information-box">
+        <InformationBox elevation={elevation} heading={heading} />
+      </div>
       <div className="viewer-control-box">
         <StepControl
           step={step}
