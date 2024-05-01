@@ -2,25 +2,22 @@
 import React from 'react';
 
 const StepControl = ({ step, decreaseStep, increaseStep, message }) => (
-  <>
-    Step
-    <div>
-      <button id="decrease" onClick={decreaseStep}>
-        -
-      </button>
-      <input
-        type="text"
-        id="stepValue"
-        value={step}
-        readOnly
-        style={{ textAlign: 'center' }}
-      ></input>
-      <button id="increase" onClick={increaseStep}>
-        +
-      </button>
-    </div>
-    <div id="message">{message}</div>
-  </>
+  <div className="step-control">
+    <span>Step:</span>
+    <button id="decrease" onClick={decreaseStep}>
+      -
+    </button>
+    <input
+      type="text"
+      id="stepValue"
+      value={step}
+      readOnly
+      style={{ width: '30px', textAlign: 'center' }}
+    ></input>
+    <button id="increase" onClick={increaseStep}>
+      +
+    </button>
+  </div>
 );
 
 export default StepControl;

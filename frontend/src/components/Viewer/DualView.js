@@ -188,13 +188,16 @@ const DualView = () => {
           key={rightResetKey}
         />
       </div>
-      <ResetButton handleResetClick={handleResetClick} />
-      <StepControl
-        step={step}
-        decreaseStep={decreaseStep}
-        increaseStep={increaseStep}
-        message={message}
-      />
+      <div className="viewer-control-box">
+        <StepControl
+          step={step}
+          decreaseStep={decreaseStep}
+          increaseStep={increaseStep}
+          message={message}
+        />
+        <ResetButton handleResetClick={handleResetClick} />
+      </div>
+      <div id="message">{message}</div>
     </div>
   );
 };
