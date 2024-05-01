@@ -8,7 +8,7 @@ const InformationBox = ({ elevation, heading }) => {
   }
   return (
     <div>
-      Elevation: {elevation}, Heading: {heading}
+      Elevation: {elevation.toFixed(1)}, Heading: {heading.toFixed(1)}
     </div>
   );
 };
