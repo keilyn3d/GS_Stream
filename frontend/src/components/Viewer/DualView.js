@@ -8,6 +8,8 @@ import CanvasContainer from './CanvasContainer';
 import ResetButton from './ResetButton';
 import StepControl from './StepControl';
 
+import InformationBox from './InformationBox';
+
 const DualView = () => {
   let userName = 'defaultUserName';
   let leftModelId = 0;
@@ -44,6 +46,10 @@ const DualView = () => {
   const [step, setStep] = useState(1);
   const initStepValue = 1;
   const [message, setMessage] = useState('');
+
+  // Elevation, Heading
+  const [elevation, setElevation] = useState(0);
+  const [heading, setHeading] = useState(0);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -85,6 +91,12 @@ const DualView = () => {
         setLeftNnImages(entries.map(([, image]) => image));
       if (data.modelId === rightModelId)
         setRightNnImages(entries.map(([, image]) => image));
+    });
+
+    socketRef.current.on('flight_params', (data) => {
+      console.log('Received flight_params');
+      setElevation(data.altitude);
+      setHeading(data.heading);
     });
 
     return () => {
@@ -135,6 +147,9 @@ const DualView = () => {
       socketRef.current.emit('reset_pose', leftModelId);
       socketRef.current.emit('reset_pose', rightModelId);
     }
+
+    setElevation(0);
+    setHeading(0);
   };
 
   const increaseStep = () => {
@@ -188,13 +203,19 @@ const DualView = () => {
           key={rightResetKey}
         />
       </div>
-      <ResetButton handleResetClick={handleResetClick} />
-      <StepControl
-        step={step}
-        decreaseStep={decreaseStep}
-        increaseStep={increaseStep}
-        message={message}
-      />
+      <div className="information-box">
+        <InformationBox elevation={elevation} heading={heading} />
+      </div>
+      <div className="viewer-control-box">
+        <StepControl
+          step={step}
+          decreaseStep={decreaseStep}
+          increaseStep={increaseStep}
+          message={message}
+        />
+        <ResetButton handleResetClick={handleResetClick} />
+      </div>
+      <div id="message">{message}</div>
     </div>
   );
 };

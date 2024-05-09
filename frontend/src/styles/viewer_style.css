@@ -9,3 +9,26 @@
     flex-direction: column;
     align-items: center;
 }
+
+.viewer-control-box{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding:  10px;
+}
+
+.step-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-top: 20px;
+    padding-right: 30px;
+}
+
+.button-container span {
+    margin-right: 0;
+}
+
+span {
+    padding-right: 5px;
+}
