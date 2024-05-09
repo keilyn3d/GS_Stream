@@ -13,5 +13,10 @@ dependencies:
   - torchvision=0.13.1
   - tqdm
   - pip:
+    - flask
+    - flask_socketio
+    - flask_cors
+    - PyYaml
+    - scipy
     - submodules/diff-gaussian-rasterization
     - submodules/simple-knn
