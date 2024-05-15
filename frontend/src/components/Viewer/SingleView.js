@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
+import { useKeyControl } from './UseKeyControl';
+
 import 'styles/viewer_style.css';
 import SingleViewHeader from './SingleViewHeader';
 import CanvasContainer from './CanvasContainer';
@@ -82,25 +84,7 @@ const SingleView = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const keyEventHandler = (event) => {
-      const currentTime = new Date().getTime();
-      if (currentTime - lastKeyPressedTime.current > 30) {
-        lastKeyPressedTime.current = currentTime;
-        if (socketRef.current) {
-          socketRef.current.emit('key_control', { key: event.key, step: step });
-        }
-      } else {
-        console.log('Too many requests!');
-      }
-    };
-
-    window.addEventListener('keypress', keyEventHandler, false);
-
-    return () => {
-      window.removeEventListener('keypress', keyEventHandler, false);
-    };
-  }, [step]);
+  useKeyControl(step, lastKeyPressedTime, socketRef);
 
   const handleResetClick = () => {
     setResetKey((prevKey) => prevKey + 1);
