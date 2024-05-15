@@ -56,14 +56,17 @@ def configure_socketio(socketio: SocketIO):
 
     @socketio.on('key_control')
     def key_control(data):
-        key, step = data['key'], data['step']
-        print(f'Key:{key}, Step:{step} are recieved from User:{user_name}')
+        keys, step = data['key'], data['step']
+        print(f'Keys:{keys}, Step:{step} are recieved from User:{user_name}')
         for model_id in model_ids:
             current_pose = user_states[request.sid][model_id]['current_pose']
-            if key == ' ':
+            if ' ' in keys and keys[' ']:
                 handle_space_key(model_id, current_pose)
-            else:
-                handle_other_keys(model_id, key, step, current_pose)
+        else:
+            pressed_keys = ''.join(key for key, pressed in keys.items() if pressed)
+            pressed_keys = pressed_keys[:2]  # Limit the length to 2
+            if pressed_keys:
+                handle_other_keys(model_id, pressed_keys, step, current_pose)
                 calculate_altitude(current_pose)
     
     # function for socket            
@@ -117,16 +120,20 @@ def handle_space_key(model_id, current_pose):
     emit("nnImg", data)
 
 
-def handle_other_keys(model_id, key, step, current_pose):
-    cam = get_changed_cam(current_pose, key, step)
+def handle_other_keys(model_id, keys, step, current_pose):
+    print(f'Handle key input for {keys} from the client')
+    pose = current_pose
+    for key in keys:
+        cam = get_changed_cam(pose, key, step)
+        pose = cam.get_new_pose()
     img_data = fetcher.get_model(model_id).render_model_image(cam)  # Render and save the model image  
     base64_img = make_base64_img(img_data)
     user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
     print(f'Message to {user_name}: set_client_main_image')
     data = {
-            'modelId': model_id,
-            'image': base64_img
-        }
+        'modelId': model_id,
+        'image': base64_img
+    }
     emit('set_client_main_image', data)
 
 def make_base64_img(image):
