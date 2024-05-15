@@ -1,23 +1,57 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export const useKeyControl = (step, lastKeyPressedTime, socketRef) => {
+  const keysPressed = useRef({});
+  const allowedKeys = [
+    'q',
+    'e',
+    'a',
+    'w',
+    's',
+    'd',
+    'u',
+    'o',
+    'i',
+    'j',
+    'k',
+    'l',
+    ' ',
+  ];
+
   useEffect(() => {
-    const keyEventHandler = (event) => {
+    const keyDownHandler = (event) => {
+      if (!allowedKeys.includes(event.key)) return;
+      keysPressed.current[event.key] = true;
+      emitKeyControl();
+    };
+
+    const keyUpHandler = (event) => {
+      if (!allowedKeys.includes(event.key)) return;
+      keysPressed.current[event.key] = false;
+      emitKeyControl();
+    };
+
+    const emitKeyControl = (event) => {
       const currentTime = new Date().getTime();
       if (currentTime - lastKeyPressedTime.current > 30) {
         lastKeyPressedTime.current = currentTime;
         if (socketRef.current) {
-          socketRef.current.emit('key_control', { key: event.key, step: step });
+          socketRef.current.emit('key_control', {
+            key: keysPressed.current,
+            step: step,
+          });
         }
       } else {
         console.log('Too many requests!');
       }
     };
 
-    window.addEventListener('keypress', keyEventHandler, false);
+    window.addEventListener('keydown', keyDownHandler, false);
+    window.addEventListener('keyup', keyUpHandler, false);
 
     return () => {
-      window.removeEventListener('keypress', keyEventHandler, false);
+      window.removeEventListener('keydown', keyDownHandler, false);
+      window.removeEventListener('keyup', keyUpHandler, false);
     };
   }, [step]);
 };
