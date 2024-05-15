@@ -36,10 +36,21 @@ export const useKeyControl = (step, lastKeyPressedTime, socketRef) => {
       if (currentTime - lastKeyPressedTime.current > 30) {
         lastKeyPressedTime.current = currentTime;
         if (socketRef.current) {
-          socketRef.current.emit('key_control', {
-            key: keysPressed.current,
-            step: step,
-          });
+          const trueKeys = Object.keys(keysPressed.current).reduce(
+            (result, key) => {
+              if (keysPressed.current[key]) {
+                result[key] = true;
+              }
+              return result;
+            },
+            {},
+          );
+          if (Object.keys(trueKeys).length > 0) {
+            socketRef.current.emit('key_control', {
+              key: trueKeys,
+              step: step,
+            });
+          }
         }
       } else {
         console.log('Too many requests!');
