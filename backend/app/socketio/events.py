@@ -62,12 +62,12 @@ def configure_socketio(socketio: SocketIO):
             current_pose = user_states[request.sid][model_id]['current_pose']
             if ' ' in keys and keys[' ']:
                 handle_space_key(model_id, current_pose)
-        else:
-            pressed_keys = ''.join(key for key, pressed in keys.items() if pressed)
-            pressed_keys = pressed_keys[:2]  # Limit the length to 2
-            if pressed_keys:
-                handle_other_keys(model_id, pressed_keys, step, current_pose)
-                calculate_altitude(current_pose)
+            else:
+                pressed_keys = ''.join(key for key, pressed in keys.items() if pressed)
+                pressed_keys = pressed_keys[:2]  # Limit the length to 2
+                if pressed_keys:
+                    handle_other_keys(model_id, pressed_keys, step, current_pose)
+                    calculate_altitude(current_pose)
     
     # function for socket            
     def set_user_data(data):
