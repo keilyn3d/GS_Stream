@@ -1,14 +1,27 @@
 const InformationBox = ({ elevation, heading }) => {
-  if (elevation === 0 && heading === 0) {
+  if (isNaN(elevation) || elevation === 0) {
+    elevation = '';
+  } else {
+    elevation = `Elevation: ${elevation.toFixed(1)}`;
+  }
+
+  if (isNaN(heading) || heading === 0) {
+    heading = '';
+  } else {
+    heading = `Heading: ${heading.toFixed(1)}`;
+  }
+
+  if (elevation === '' && heading === '') {
     return (
       <div>
         <span></span>
       </div>
     );
   }
+
   return (
     <div>
-      Elevation: {elevation.toFixed(1)}, Heading: {heading.toFixed(1)}
+      {elevation}, {heading}
     </div>
   );
 };
