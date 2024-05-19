@@ -1,49 +1,19 @@
-from typing import Any
+import json
+import os
 from ..image_renderer.render_wrapper import GS_Model
 
-model_config_data = [
-    {
-        'id':'101', 
-        'name': 'st_comb/st_1', 
-        'config_path':'/home/ubuntu/projects/GS_Stream/output/st_comb/st_1/config.yaml',
-        'R_mat': '[[-0.9910061, -0.01236076, 0.13328557], [-0.01781009, 0.9990534, -0.03977152], [-0.13266692, -0.04178828, -0.99028504]]',
-        'T_vec': '[0.5559487, -0.13512671, 5.771629]'
-    },
-    {
-        'id':'102', 
-        'name': 'st_comb/st_2', 
-        'config_path':'/home/ubuntu/projects/GS_Stream/output/st_comb/st_2/config.yaml',
-        'R_mat': '[[-0.9910061, -0.01236076, 0.13328557], [-0.01781009, 0.9990534, -0.03977152], [-0.13266692, -0.04178828, -0.99028504]]',
-        'T_vec': '[0.5559487, -0.13512671, 5.771629]'
-    },
-    {
-        'id':'103', 
-        'name': 'RCH', 
-        'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml',
-        'R_mat':'[[ 0.9347217, 0.01801105, 0.354922  ],[ 0.14371365, 0.89425105, -0.42386374],[-0.32502365, 0.44720212, 0.8332877 ]]',
-        'T_vec':'[ 0.3057762, -0.8536954, 2.3952193]'        
-    },
-    {
-        'id':'104', 
-        'name': 'UW_tower', 
-        'config_path':'/home/ubuntu/projects/GS_Stream/output/UW_tower/config.yaml', 
-        'R_mat':'[[-0.70811329, -0.21124761, 0.67375813],[0.16577646, 0.87778949, 0.4494483],[-0.68636268, 0.42995355, -0.58655453]]',
-        'T_vec':'[-0.32326042, -3.65895232, 2.27446875]'
-
-    },
-    # {'id':3, 'name': 'CViSS', 'config_path':'/home/ubuntu/projects/GS_Stream/output/RCH/config.yaml'},
-]
 
 class ModelConfig:
     _instances = {}
-    
+    model_configs = []
+
     def __new__(cls, key, config):
         if key not in cls._instances:
             instance = super().__new__(cls)
             instance.configure(config)
             cls._instances[key] = instance
         return cls._instances[key]
-    
+
     def configure(self, config):
         self.model_config = config
         self._id = config['id']
@@ -51,19 +21,19 @@ class ModelConfig:
         self._config_path = config['config_path']
         self._R_mat = config['R_mat']
         self._T_vec = config['T_vec']
-        
+
     @property
     def id(self):
         return self._id
-    
+
     @property
     def name(self):
         return self._name
-    
+
     @property
     def config_path(self):
         return self._config_path
-    
+
     @property
     def R_mat(self):
         return self._R_mat
@@ -72,42 +42,69 @@ class ModelConfig:
     def T_vec(self):
         return self._T_vec
 
-model_configs = []
-for config in model_config_data:
-    model_config = ModelConfig(config['id'], config)
-    model_configs.append(model_config)
-         
-def get_model_ids_and_names():
-    model_ids_and_names = [(model.id, model.name) for model in model_configs]
-    return model_ids_and_names
+    @classmethod
+    def load_configs(cls, json_file_path):
+        with open(json_file_path, 'r') as f:
+            model_config_data = json.load(f)
+        return [cls(config['id'], config) for config in model_config_data]
 
-models = {}
 
-def set_model(model_id):
-    try:
-        config = find_model_config(model_id)
-        print("Model config path:", config.config_path)
-        new_model = GS_Model(config_path=config.config_path, R_mat=config.R_mat, T_vec=config.T_vec)
-        models[model_id] = new_model  
-    except ValueError as e:
-        print(e)    
+class ModelManager:
+    _instance = None
 
-def get_model(model_id):
-    return models.get(model_id)
-    
-def find_model_config(model_id):    
-    config = next((config for config in model_configs if config.id == model_id), None)
-    if config:
-        return config
-    else:
-        raise ValueError('Invalid model_id: {}'.format(model_id))
-        
-def get_model_config_data(model_id):
-    if model_id == 'model1':
-        return 'Initial data for model1'
-    elif model_id == 'model2':
-        return 'Initial data for model2'
-    elif model_id == 'model3':
-        return 'Initial data for model3'
-    else:
-        return 'Invalid model_id'
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(ModelManager, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, model_configs=None):
+        if model_configs is not None:
+            self.models = {}
+            self.model_config = {config.id: config for config in model_configs}
+
+    def set_model(self, model_id):
+        try:
+            config = self.find_model_config(model_id)
+            print("Model config path:", config.config_path)
+            new_model = GS_Model(
+                config_path=config.config_path,
+                R_mat=config.R_mat,
+                T_vec=config.T_vec
+            )
+            self.models[model_id] = new_model
+        except ValueError as e:
+            print(e)
+
+    def get_model(self, model_id):
+        return self.models.get(model_id)
+
+    def find_model_config(self, model_id):
+        config = self.model_config.get(model_id)
+        if config:
+            return config
+        else:
+            raise ValueError('Invalid model_id: {}'.format(model_id))
+
+    def get_model_config_data(self, model_id):
+        config = self.find_model_config(model_id)
+        if config:
+            return config.model_config  # Return the actual config data
+        else:
+            return 'Invalid model_id'
+
+    def get_model_ids_and_names(self):
+        model_ids_and_names = [
+            (config.id, config.name) for config in self.model_config.values()
+        ]
+        return model_ids_and_names
+
+
+# Load model configs
+json_file_path = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    'model_config_data.json'
+)
+model_configs = ModelConfig.load_configs(json_file_path)
+
+# Initialize model manager
+model_manager = ModelManager(model_configs)
