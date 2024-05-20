@@ -5,8 +5,9 @@ from ..image_renderer.image_creator import *
 from ..image_renderer.render_wrapper import decompose_44
 import logging
 import os
-from ..model_config import model_config_fetcher as fetcher
+from ..model_config.model_config_fetcher import ModelManager
 
+model_manager = ModelManager()
 
 user_name = ''
 model_ids = None
@@ -38,7 +39,7 @@ def configure_socketio(socketio: SocketIO):
             
     @socketio.on('get_init_image')
     def handle_get_init_image(model_id):
-        model = fetcher.get_model(model_id)
+        model = model_manager.get_model(model_id)
         init_image = model.get_init_image()
         base64_img = make_base64_img(init_image)
         print(f'Message to {user_name} for {model_id} model: get_init_image')
@@ -86,7 +87,7 @@ def configure_socketio(socketio: SocketIO):
     def set_user_init_pose():
         user_models = user_states.setdefault(request.sid, {})
         for model_id in model_ids:
-            model = fetcher.get_model(model_id)
+            model = model_manager.get_model(model_id)
             if model:
                 user_models[model_id] = {
                     'init_pose': model.init_pose(),
@@ -96,14 +97,14 @@ def configure_socketio(socketio: SocketIO):
 
 def calculate_altitude(current_pose):
     for model_id in model_ids:
-        model = fetcher.get_model(model_id)
+        model = model_manager.get_model(model_id)
         R, T = decompose_44(np.array(current_pose))
         altitude, heading = model.get_flight_params(R, T) # how to process in dual modes?
         logging.info(f'Altitude: {altitude} and Heading: {heading}')
         emit("flight_params", {'altitude': altitude, 'heading': heading})
 
 def handle_space_key(model_id, current_pose):
-    model = fetcher.get_model(model_id)
+    model = model_manager.get_model(model_id)
     filenames = model.images.get_closest_n(pose=current_pose, n=3)
     print("The closest images are: " + ', '.join(str(x) for x in filenames))
     closest_images = {}
@@ -126,7 +127,7 @@ def handle_other_keys(model_id, keys, step, current_pose):
     for key in keys:
         cam = get_changed_cam(pose, key, step)
         pose = cam.get_new_pose()
-    img_data = fetcher.get_model(model_id).render_model_image(cam)  # Render and save the model image  
+    img_data = model_manager.get_model(model_id).render_model_image(cam)  # Render and save the model image  
     base64_img = make_base64_img(img_data)
     user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
     print(f'Message to {user_name}: set_client_main_image')
