@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/style.css';
+import '../../styles/style.css';
 import { useNavigate } from 'react-router-dom';
 
-const Home = () => {
+const Index = () => {
   const navigate = useNavigate();
 
   const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -146,4 +146,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Index;
