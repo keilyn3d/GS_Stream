@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/style.css';
 import { useNavigate } from 'react-router-dom';
+import Title from './MainTitle';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ const Index = () => {
 
   return (
     <div>
-      <h1 className="title">CViSS G.S. Inspector Registration</h1>
+      <Title />
       <form onSubmit={handleSubmit} className="buttons">
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <label>Please Enter Email:</label>
