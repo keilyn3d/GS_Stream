@@ -18,13 +18,21 @@ const Index = () => {
   const [allModels, setAllModels] = useState([]);
 
   useEffect(() => {
-    fetch(backendAddress + '/api/codes')
-      .then((response) => response.json())
-      .then((data) => {
-        setAllModels(data);
-      })
-      .catch((error) => console.error('Fetching data failed', error));
-  }, []);
+    const intervalId = setInterval(() => {
+      setAllModels([]);
+      fetch(backendAddress + '/api/codes')
+        .then((response) => response.json())
+        .then((data) => {
+          setAllModels(data);
+        })
+        .catch((error) => console.error('Fetching data failed', error));
+    }, 1000); // 1000ms = 1s
+
+    // Clean up function
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [backendAddress]);
   console.log(allModels);
 
   const fetchConfig = async (modelId) => {
