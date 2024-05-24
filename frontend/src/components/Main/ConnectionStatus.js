@@ -1,7 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tooltip } from 'react-tooltip';
 
-const ConnectionStatus = ({ isConnected }) => {
+const ConnectionStatus = () => {
+  const [isConnected, setIsConnected] = useState(false);
+  const backendAddress = process.env.REACT_APP_BACKEND_URL;
+
+  useEffect(() => {
+    fetch(backendAddress + '/health')
+      .then((response) => {
+        if (response.ok) {
+          setIsConnected(true);
+        } else {
+          setIsConnected(false);
+        }
+      })
+      .catch((error) => {
+        setIsConnected(false);
+      });
+  }, [backendAddress]);
   return (
     <>
       <div

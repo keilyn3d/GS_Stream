@@ -1,25 +1,8 @@
 // Title.js
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ConnectionStatus from './ConnectionStatus';
 
 const Title = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const backendAddress = process.env.REACT_APP_BACKEND_URL;
-
-  useEffect(() => {
-    fetch(backendAddress + '/health')
-      .then((response) => {
-        if (response.ok) {
-          setIsConnected(true);
-        } else {
-          setIsConnected(false);
-        }
-      })
-      .catch((error) => {
-        setIsConnected(false);
-      });
-  }, [backendAddress]);
-
   return (
     <h1 className="title">
       TowerEye AI
@@ -27,7 +10,7 @@ const Title = () => {
         ™
       </span>{' '}
       Registration
-      <ConnectionStatus isConnected={isConnected} />
+      <ConnectionStatus />
     </h1>
   );
 };
