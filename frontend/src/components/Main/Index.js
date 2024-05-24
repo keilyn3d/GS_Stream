@@ -16,23 +16,35 @@ const Index = () => {
   const [selectedModelNameForComparison, setSelectedModelNameForComparison] =
     useState('');
   const [allModels, setAllModels] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setAllModels([]);
+      if (isSubmitting) {
+        // Skip fetch request if isSubmitting is true
+        return;
+      }
+
       fetch(backendAddress + '/api/codes')
         .then((response) => response.json())
         .then((data) => {
-          setAllModels(data);
+          // Only update state if data has changed
+          if (JSON.stringify(data) !== JSON.stringify(allModels)) {
+            setAllModels(data);
+          }
         })
-        .catch((error) => console.error('Fetching data failed', error));
+        .catch((error) => {
+          console.error('Fetching data failed', error);
+          // Initialize allModels if fetch request fails
+          setAllModels([]);
+        });
     }, 1000); // 1000ms = 1s
 
     // Clean up function
     return () => {
       clearInterval(intervalId);
     };
-  }, [backendAddress]);
+  }, [backendAddress, isSubmitting]);
   console.log(allModels);
 
   const fetchConfig = async (modelId) => {
@@ -67,6 +79,8 @@ const Index = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const config = await fetchConfig(selectedModelId);
       const route = selectedModelIdForComparison
@@ -86,6 +100,8 @@ const Index = () => {
       navigate(route, { state });
     } catch (error) {
       console.error('Error handling submit', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
