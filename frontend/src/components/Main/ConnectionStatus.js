@@ -6,18 +6,26 @@ const ConnectionStatus = () => {
   const backendAddress = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
-    fetch(backendAddress + '/health')
-      .then((response) => {
-        if (response.ok) {
-          setIsConnected(true);
-        } else {
+    const intervalId = setInterval(() => {
+      fetch(backendAddress + '/health')
+        .then((response) => {
+          if (response.ok) {
+            setIsConnected(true);
+          } else {
+            setIsConnected(false);
+          }
+        })
+        .catch((error) => {
           setIsConnected(false);
-        }
-      })
-      .catch((error) => {
-        setIsConnected(false);
-      });
+        });
+    }, 1000); // 1000ms = 1s
+
+    // Clean up function
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [backendAddress]);
+
   return (
     <>
       <div
