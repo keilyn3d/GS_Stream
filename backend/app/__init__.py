@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 from flask_cors import CORS
 
 from .api.routes import api_blueprint
+from .api.health import health_blueprint
 from .socketio.events import configure_socketio
 
 def configure_app(app):
@@ -11,6 +12,7 @@ def configure_app(app):
 
 def configure_routes(app):
     app.register_blueprint(api_blueprint, url_prefix='/api')
+    app.register_blueprint(health_blueprint, url_prefix='/health')
 
 def create_app():
     app = Flask(__name__)
