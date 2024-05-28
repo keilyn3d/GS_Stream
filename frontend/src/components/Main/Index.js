@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/style.css';
+import '../../styles/style.css';
 import { useNavigate } from 'react-router-dom';
+import Title from './MainTitle';
 
-const Home = () => {
+const Index = () => {
   const navigate = useNavigate();
 
   const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -15,15 +16,35 @@ const Home = () => {
   const [selectedModelNameForComparison, setSelectedModelNameForComparison] =
     useState('');
   const [allModels, setAllModels] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(backendAddress + '/api/codes')
-      .then((response) => response.json())
-      .then((data) => {
-        setAllModels(data);
-      })
-      .catch((error) => console.error('Fetching data failed', error));
-  }, []);
+    const intervalId = setInterval(() => {
+      if (isSubmitting) {
+        // Skip fetch request if isSubmitting is true
+        return;
+      }
+
+      fetch(backendAddress + '/api/codes')
+        .then((response) => response.json())
+        .then((data) => {
+          // Only update state if data has changed
+          if (JSON.stringify(data) !== JSON.stringify(allModels)) {
+            setAllModels(data);
+          }
+        })
+        .catch((error) => {
+          console.error('Fetching data failed', error);
+          // Initialize allModels if fetch request fails
+          setAllModels([]);
+        });
+    }, 1000); // 1000ms = 1s
+
+    // Clean up function
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [backendAddress, isSubmitting]);
   console.log(allModels);
 
   const fetchConfig = async (modelId) => {
@@ -58,6 +79,8 @@ const Home = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const config = await fetchConfig(selectedModelId);
       const route = selectedModelIdForComparison
@@ -77,12 +100,14 @@ const Home = () => {
       navigate(route, { state });
     } catch (error) {
       console.error('Error handling submit', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div>
-      <h1 className="title">CViSS G.S. Inspector Registration</h1>
+      <Title />
       <form onSubmit={handleSubmit} className="buttons">
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <label>Please Enter Email:</label>
@@ -146,4 +171,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Index;
