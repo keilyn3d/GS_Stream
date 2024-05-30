@@ -2,14 +2,14 @@ import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import useSocket from './UseSocket';
 
-import { useKeyControl } from './UseKeyControl';
+import { useKeyControl } from '../Common/UseKeyControl';
 
 import 'styles/viewer_style.css';
 import SingleViewHeader from './SingleViewHeader';
-import CanvasContainer from './CanvasContainer';
-import ResetButton from './ResetButton';
-import StepControl from './StepControl';
-import InformationBox from './InformationBox';
+import CanvasContainer from '../Common/CanvasContainer';
+import ResetButton from '../Common/ResetButton';
+import StepControl from '../Common/StepControl';
+import InformationBox from '../Common/InformationBox';
 
 const SingleView = () => {
   const location = useLocation();

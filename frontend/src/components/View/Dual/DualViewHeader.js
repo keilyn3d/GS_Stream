@@ -1,6 +1,6 @@
 import React from 'react';
-import ViewTitle from './ViewTitle';
-import WelcomeMessage from './WelcomeMessage';
+import ViewTitle from '../Common/ViewTitle';
+import WelcomeMessage from '../Common/WelcomeMessage';
 
 const SingleViewHeader = ({ userName, leftModelName, rightModelName }) => {
   return (

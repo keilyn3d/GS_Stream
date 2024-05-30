@@ -2,14 +2,14 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
-import { useKeyControl } from './UseKeyControl';
+import { useKeyControl } from '../Common/UseKeyControl';
 
 import DualViewHeader from './DualViewHeader';
-import CanvasContainer from './CanvasContainer';
-import ResetButton from './ResetButton';
-import StepControl from './StepControl';
+import CanvasContainer from '../Common/CanvasContainer';
+import ResetButton from '../Common/ResetButton';
+import StepControl from '../Common/StepControl';
 
-import InformationBox from './InformationBox';
+import InformationBox from '../Common/InformationBox';
 
 const DualView = () => {
   let userName = 'defaultUserName';
