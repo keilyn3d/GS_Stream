@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import useSocket from './UseSocket';
+import useSocket from './SingleViewSocket';
 
 import { useKeyControl } from '../Common/UseKeyControl';
 
