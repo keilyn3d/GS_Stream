@@ -6,6 +6,7 @@ import { useKeyControl } from '../Common/UseKeyControl';
 
 import 'styles/viewer_style.css';
 import SingleViewHeader from './SingleViewHeader';
+// import Preset from '../Common/Preset';
 import CanvasContainer from '../Common/CanvasContainer';
 import ResetButton from '../Common/ResetButton';
 import StepControl from '../Common/StepControl';
@@ -28,21 +29,30 @@ const SingleView = () => {
   const [message, setMessage] = useState('');
   const initStepValue = 1;
   const [resetKey, setResetKey] = useState(0);
+  const [mainImage, setMainImage] = useState('');
+  const [nnImages, setNnImages] = useState(['', '', '']);
+  const [elevation, setElevation] = useState(0);
+  const [heading, setHeading] = useState(0);
 
-  const { socketRef, mainImage, nnImages, elevation, heading } = useSocket(
-    userName,
-    selectedModelId,
-  );
+  const { socketRef } = useSocket(userName, selectedModelId, {
+    setMainImage,
+    setNnImages,
+    setElevation,
+    setHeading,
+  });
 
   useKeyControl(step, lastKeyPressedTime, socketRef);
 
   const handleResetClick = () => {
     setResetKey((prevKey) => prevKey + 1);
     setStep(initStepValue);
+    setNnImages(['', '', '']);
     if (socketRef.current) {
       socketRef.current.emit('get_init_image', selectedModelId);
       socketRef.current.emit('reset_pose', selectedModelId);
     }
+    setElevation(0);
+    setHeading(0);
   };
 
   const increaseStep = () => {
@@ -67,22 +77,34 @@ const SingleView = () => {
     });
   };
 
+  // const saveState = () => {
+  //   const state = {
+  //     step,
+  //     message,
+  //   };
+  //   return state;
+  // };
+
   return (
     <div className="content">
       <SingleViewHeader
         userName={userName}
         selectedModelName={selectedModelName}
       />
-      <CanvasContainer
-        containerId="main"
-        mainCanvasId="main"
-        width="800"
-        height="600"
-        mainImage={mainImage}
-        nnImages={nnImages}
-        nnCanvasLocation="right"
-        key={resetKey}
-      />
+
+      <div>
+        {/* <Preset saveState={saveState} /> */}
+        <CanvasContainer
+          containerId="main"
+          mainCanvasId="main"
+          width="800"
+          height="600"
+          mainImage={mainImage}
+          nnImages={nnImages}
+          nnCanvasLocation="right"
+          key={resetKey}
+        />
+      </div>
       <div className="information-box">
         <InformationBox elevation={elevation} heading={heading} />
       </div>

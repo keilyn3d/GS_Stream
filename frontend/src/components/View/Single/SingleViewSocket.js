@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
-const useSocket = (userName, selectedModelId) => {
+const useSocket = (
+  userName,
+  selectedModelId,
+  { setMainImage, setNnImages, setElevation, setHeading },
+) => {
   const socketRef = useRef(null);
-  const [mainImage, setMainImage] = useState('');
-  const [nnImages, setNnImages] = useState(['', '', '']);
-  const [elevation, setElevation] = useState(0);
-  const [heading, setHeading] = useState(0);
 
   useEffect(() => {
     const backendAddress = process.env.REACT_APP_BACKEND_URL;
@@ -56,14 +56,17 @@ const useSocket = (userName, selectedModelId) => {
       }
       console.log('Disconnected from Socket.IO server');
     };
-  }, [userName, selectedModelId]);
+  }, [
+    userName,
+    selectedModelId,
+    setMainImage,
+    setNnImages,
+    setElevation,
+    setHeading,
+  ]);
 
   return {
     socketRef,
-    mainImage,
-    nnImages,
-    elevation,
-    heading,
   };
 };
 
