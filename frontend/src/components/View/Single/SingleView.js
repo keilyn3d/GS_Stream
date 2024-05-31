@@ -1,12 +1,14 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, createContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import useSocket from './SingleViewSocket';
 
 import { useKeyControl } from '../Common/UseKeyControl';
 
+import { UserContext } from './SingleViewContext';
+
 import 'styles/viewer_style.css';
 import SingleViewHeader from './SingleViewHeader';
-// import Preset from '../Common/Preset';
+import UpperInfoBox from '../Common/UpperInfoBox';
 import CanvasContainer from '../Common/CanvasContainer';
 import ResetButton from '../Common/ResetButton';
 import StepControl from '../Common/StepControl';
@@ -23,6 +25,8 @@ const SingleView = () => {
     selectedModelId = location.state.selectedModelId || selectedModelId;
     selectedModelName = location.state.selectedModelName || selectedModelName;
   }
+
+  const userContextValue = { userName, selectedModelName };
 
   const lastKeyPressedTime = useRef(0);
   const [step, setStep] = useState(1);
@@ -87,13 +91,11 @@ const SingleView = () => {
 
   return (
     <div className="content">
-      <SingleViewHeader
-        userName={userName}
-        selectedModelName={selectedModelName}
-      />
-
+      <SingleViewHeader />
       <div>
-        {/* <Preset saveState={saveState} /> */}
+        <UserContext.Provider value={userContextValue}>
+          <UpperInfoBox />
+        </UserContext.Provider>
         <CanvasContainer
           containerId="main"
           mainCanvasId="main"

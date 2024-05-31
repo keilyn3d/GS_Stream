@@ -32,3 +32,23 @@
 span {
     padding-right: 5px;
 }
+
+.upper-info-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    flex: 1;
+    text-align: left;
+}
+
+  
+.preset-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+    gap: 5px;
+    align-self: flex-end;
+}
