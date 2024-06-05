@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 
-import { UserContext } from '../Single/SingleViewContext';
+import { UserContext } from './UserContext';
 
 import AssetButton from './AssetButton';
 import 'styles/viewer_style.css';

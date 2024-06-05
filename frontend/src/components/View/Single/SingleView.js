@@ -4,11 +4,11 @@ import useSocket from './SingleViewSocket';
 
 import { useKeyControl } from '../Common/UseKeyControl';
 
-import { UserContext } from './SingleViewContext';
+import { UserContext } from '../Common/UserContext';
 
 import 'styles/viewer_style.css';
 import SingleViewHeader from './SingleViewHeader';
-import UpperInfoBox from '../Common/UpperInfoBox';
+import SingleViewUpperInfoBox from './SingleViewUpperInfoBox';
 import CanvasContainer from '../Common/CanvasContainer';
 import ResetButton from '../Common/ResetButton';
 import StepControl from '../Common/StepControl';
@@ -98,7 +98,7 @@ const SingleView = () => {
       <SingleViewHeader />
       <div>
         <UserContext.Provider value={userContextValue}>
-          <UpperInfoBox />
+          <SingleViewUpperInfoBox />
         </UserContext.Provider>
         <CanvasContainer
           containerId="main"

@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
-import { UserContext } from '../Single/SingleViewContext';
+import { UserContext } from '../Common/UserContext';
 
-const UserInfo = () => {
+const SingleViewUserInfo = () => {
   const { userName, selectedModelName } = useContext(UserContext);
 
   return (
@@ -11,4 +11,4 @@ const UserInfo = () => {
   );
 };
 
-export default UserInfo;
+export default SingleViewUserInfo;
