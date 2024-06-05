@@ -1,5 +1,5 @@
 import UserInfo from './UserInfo';
-// import Preset from './Preset';
+import AssetContainer from './AssetButtonContainer';
 
 import 'styles/viewer_style.css';
 
@@ -7,7 +7,7 @@ const UpperInfoBox = () => {
   return (
     <div className="upper-info-box">
       <UserInfo className="user-info" />
-      {/* <Preset /> */}
+      <AssetContainer />
     </div>
   );
 };

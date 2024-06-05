@@ -1,4 +1,4 @@
-import React, { useRef, useState, createContext } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import useSocket from './SingleViewSocket';
 
@@ -26,7 +26,20 @@ const SingleView = () => {
     selectedModelName = location.state.selectedModelName || selectedModelName;
   }
 
-  const userContextValue = { userName, selectedModelName };
+  const handleAssetButtonClick = (index) => {
+    console.log('Asset Button Clicked: ', index);
+    const data = {
+      selectedModelId: selectedModelId,
+      index: index,
+    };
+    socketRef.current.emit('get_asset_pose', data);
+  };
+
+  const userContextValue = {
+    userName,
+    selectedModelName,
+    handleAssetButtonClick: handleAssetButtonClick,
+  };
 
   const lastKeyPressedTime = useRef(0);
   const [step, setStep] = useState(1);
@@ -80,15 +93,6 @@ const SingleView = () => {
       return prevStep;
     });
   };
-
-  // const saveState = () => {
-  //   const state = {
-  //     step,
-  //     message,
-  //   };
-  //   return state;
-  // };
-
   return (
     <div className="content">
       <SingleViewHeader />
