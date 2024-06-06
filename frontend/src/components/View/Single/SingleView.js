@@ -1,15 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import io from 'socket.io-client';
+import useSocket from './SingleViewSocket';
 
-import { useKeyControl } from './UseKeyControl';
+import { useKeyControl } from '../Common/UseKeyControl';
+
+import { UserContext } from '../Common/UserContext';
 
 import 'styles/viewer_style.css';
 import SingleViewHeader from './SingleViewHeader';
-import CanvasContainer from './CanvasContainer';
-import ResetButton from './ResetButton';
-import StepControl from './StepControl';
-import InformationBox from './InformationBox';
+import SingleViewUpperInfoBox from './SingleViewUpperInfoBox';
+import CanvasContainer from '../Common/CanvasContainer';
+import ResetButton from '../Common/ResetButton';
+import StepControl from '../Common/StepControl';
+import InformationBox from '../Common/InformationBox';
 
 const SingleView = () => {
   const location = useLocation();
@@ -23,8 +26,22 @@ const SingleView = () => {
     selectedModelName = location.state.selectedModelName || selectedModelName;
   }
 
+  const handleAssetButtonClick = (index) => {
+    console.log('Asset Button Clicked: ', index);
+    const data = {
+      selectedModelId: selectedModelId,
+      index: index,
+    };
+    socketRef.current.emit('get_asset_pose', data);
+  };
+
+  const userContextValue = {
+    userName,
+    selectedModelName,
+    handleAssetButtonClick: handleAssetButtonClick,
+  };
+
   const lastKeyPressedTime = useRef(0);
-  const socketRef = useRef(null);
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState('');
   const initStepValue = 1;
@@ -34,55 +51,12 @@ const SingleView = () => {
   const [elevation, setElevation] = useState(0);
   const [heading, setHeading] = useState(0);
 
-  useEffect(() => {
-    const backendAddress = process.env.REACT_APP_BACKEND_URL;
-    if (!socketRef.current) {
-      socketRef.current = io(backendAddress);
-    }
-
-    socketRef.current.on('connect', () => {
-      socketRef.current.emit('set_user_data', {
-        userName: userName,
-        modelIds: [selectedModelId],
-      });
-      console.log('Connected to Socket.IO server');
-      socketRef.current.emit('get_init_image', selectedModelId);
-    });
-
-    socketRef.current.on('response', (message) => {
-      console.log('Received message from Socket.IO:', message);
-    });
-
-    socketRef.current.on('set_client_init_image', (data) => {
-      console.log('Received init image');
-      setMainImage(data.image);
-    });
-
-    socketRef.current.on('set_client_main_image', (data) => {
-      console.log('Received main image');
-      setMainImage(data.image);
-    });
-
-    socketRef.current.on('nnImg', (data) => {
-      console.log('Received nnImages');
-      const entries = Object.entries(data.images);
-      setNnImages(entries.map(([, image]) => image));
-    });
-
-    socketRef.current.on('flight_params', (data) => {
-      console.log('Received flight_params');
-      setElevation(data.altitude);
-      setHeading(data.heading);
-    });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-      console.log('Disconnected from Socket.IO server');
-    };
-  }, []);
+  const { socketRef } = useSocket(userName, selectedModelId, {
+    setMainImage,
+    setNnImages,
+    setElevation,
+    setHeading,
+  });
 
   useKeyControl(step, lastKeyPressedTime, socketRef);
 
@@ -119,23 +93,24 @@ const SingleView = () => {
       return prevStep;
     });
   };
-
   return (
     <div className="content">
-      <SingleViewHeader
-        userName={userName}
-        selectedModelName={selectedModelName}
-      />
-      <CanvasContainer
-        containerId="main"
-        mainCanvasId="main"
-        width="800"
-        height="600"
-        mainImage={mainImage}
-        nnImages={nnImages}
-        nnCanvasLocation="right"
-        key={resetKey}
-      />
+      <SingleViewHeader />
+      <div>
+        <UserContext.Provider value={userContextValue}>
+          <SingleViewUpperInfoBox />
+        </UserContext.Provider>
+        <CanvasContainer
+          containerId="main"
+          mainCanvasId="main"
+          width="800"
+          height="600"
+          mainImage={mainImage}
+          nnImages={nnImages}
+          nnCanvasLocation="right"
+          key={resetKey}
+        />
+      </div>
       <div className="information-box">
         <InformationBox elevation={elevation} heading={heading} />
       </div>

@@ -21,6 +21,7 @@ class ModelConfig:
         self._config_path = config['config_path']
         self._R_mat = config['R_mat']
         self._T_vec = config['T_vec']
+        self._assets_pose = config['assets_pose']
 
     @property
     def id(self):
@@ -42,6 +43,10 @@ class ModelConfig:
     def T_vec(self):
         return self._T_vec
 
+    @property
+    def assets_pose(self):
+        return self._assets_pose
+    
     @classmethod
     def load_configs(cls, json_file_path):
         with open(json_file_path, 'r') as f:
@@ -97,6 +102,11 @@ class ModelManager:
             (config.id, config.name) for config in self.model_config.values()
         ]
         return model_ids_and_names
+    
+    def get_model_asset_pose(self, model_id, index):
+        config = self.find_model_config(model_id)
+        return  config.assets_pose[str(index)]
+
 
 
 # Load model configs

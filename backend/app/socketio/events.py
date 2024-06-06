@@ -2,7 +2,7 @@ import base64
 from flask import request
 from flask_socketio import SocketIO, emit
 from ..image_renderer.image_creator import *
-from ..image_renderer.render_wrapper import decompose_44
+from ..image_renderer.render_wrapper import decompose_44, compose_44
 import logging
 import os
 from ..model_config.model_config_fetcher import ModelManager
@@ -58,7 +58,7 @@ def configure_socketio(socketio: SocketIO):
     @socketio.on('key_control')
     def key_control(data):
         keys, step = data['key'], data['step']
-        print(f'Keys:{keys}, Step:{step} are recieved from User:{user_name}')
+        print(f'Keys:{keys}, Step:{step} are received from User:{user_name}')
         for model_id in model_ids:
             current_pose = user_states[request.sid][model_id]['current_pose']
             if ' ' in keys and keys[' ']:
@@ -69,6 +69,24 @@ def configure_socketio(socketio: SocketIO):
                 if pressed_keys:
                     handle_other_keys(model_id, pressed_keys, step, current_pose)
                     calculate_altitude(current_pose)
+                    
+    @socketio.on('get_asset_pose')
+    def handle_get_asset_pose(data):
+        model_id, index = data['selectedModelId'], data['index']
+        pose_data = model_manager.get_model_asset_pose(model_id, index)
+        print(f'Asset pose for {model_id} model and index {index} is {pose_data}')
+        R, T = np.array(eval(pose_data["R_mat"])), np.array(eval(pose_data["T_vec"]))
+        cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963)
+        model = model_manager.get_model(model_id)
+        img_data = model.render_model_image(cam)  # Render and save the model image  
+        base64_img = make_base64_img(img_data)
+        user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
+        print(f'Message to {user_name}: set_client_main_image')
+        data = {
+            'modelId': model_id,
+            'image': base64_img
+        }
+        emit('set_client_main_image', data)
     
     # function for socket            
     def set_user_data(data):

@@ -2,14 +2,17 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
-import { useKeyControl } from './UseKeyControl';
+import { useKeyControl } from '../Common/UseKeyControl';
 
+import { UserContext } from '../Common/UserContext';
+
+import 'styles/viewer_style.css';
 import DualViewHeader from './DualViewHeader';
-import CanvasContainer from './CanvasContainer';
-import ResetButton from './ResetButton';
-import StepControl from './StepControl';
-
-import InformationBox from './InformationBox';
+import DualViewUpperInfoBox from './DualViewUpperInfoBox';
+import CanvasContainer from '../Common/CanvasContainer';
+import ResetButton from '../Common/ResetButton';
+import StepControl from '../Common/StepControl';
+import InformationBox from '../Common/InformationBox';
 
 const DualView = () => {
   let userName = 'defaultUserName';
@@ -27,6 +30,22 @@ const DualView = () => {
     rightModelName =
       location.state.selectedModelNameForComparison || rightModelName;
   }
+
+  const handleAssetButtonClick = (index) => {
+    console.log('Asset Button Clicked: ', index);
+    const data = {
+      selectedModelId: leftModelId,
+      index: index,
+    };
+    socketRef.current.emit('get_asset_pose', data);
+  };
+
+  const userContextValue = {
+    userName,
+    leftModelName,
+    rightModelName,
+    handleAssetButtonClick: handleAssetButtonClick,
+  };
 
   // Socket
   const socketRef = useRef(null);
@@ -159,32 +178,33 @@ const DualView = () => {
 
   return (
     <div className="content">
-      <DualViewHeader
-        userName={userName}
-        leftModelName={leftModelName}
-        rightModelName={rightModelName}
-      />
-      <div style={{ display: 'flex' }}>
-        <CanvasContainer
-          containerId="left-model"
-          mainCanvasId="left-model-main-canvas"
-          width="600"
-          height="475"
-          mainImage={leftMainImage}
-          nnImages={leftNnImages}
-          nnCanvasLocation="left"
-          key={leftResetKey}
-        />
-        <CanvasContainer
-          containerId="right-model"
-          mainCanvasId="right-model-main-canvas"
-          width="600"
-          height="475"
-          mainImage={rightMainImage}
-          nnImages={rightNnImages}
-          nnCanvasLocation="right"
-          key={rightResetKey}
-        />
+      <DualViewHeader />
+      <div>
+        <UserContext.Provider value={userContextValue}>
+          <DualViewUpperInfoBox />
+        </UserContext.Provider>
+        <div style={{ display: 'flex' }}>
+          <CanvasContainer
+            containerId="left-model"
+            mainCanvasId="left-model-main-canvas"
+            width="600"
+            height="475"
+            mainImage={leftMainImage}
+            nnImages={leftNnImages}
+            nnCanvasLocation="left"
+            key={leftResetKey}
+          />
+          <CanvasContainer
+            containerId="right-model"
+            mainCanvasId="right-model-main-canvas"
+            width="600"
+            height="475"
+            mainImage={rightMainImage}
+            nnImages={rightNnImages}
+            nnCanvasLocation="right"
+            key={rightResetKey}
+          />
+        </div>
       </div>
       <div className="information-box">
         <InformationBox elevation={elevation} heading={heading} />
