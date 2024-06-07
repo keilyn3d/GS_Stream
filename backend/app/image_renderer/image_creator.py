@@ -1,7 +1,7 @@
 import numpy as np
 from .render_wrapper import DummyCamera
 from . import camera_pos_utils as camera
-
+import logging
 
 def configure_camera(R, T, width=800, height=600, fovx=1.4261863218, fovy=1.150908963):
     return DummyCamera(R=R, T=T, W=width, H=height, FoVx=fovx, FoVy=fovy)
@@ -40,5 +40,6 @@ def get_changed_cam(pose, key, step):
         
     # Decompose the current pose
     R, T = camera.decompose_44(np.array(pose))
+    logging.info(f"R: {R}, T: {T}")
     cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963, C2C_Rot=C2C_Rot, C2C_T=C2C_T)
     return cam
