@@ -117,11 +117,12 @@ class GS_Model():
 
         result = render(cam, self.gaussians, self.pipeline, self.background)["render"]
 
+        result = torch.clamp(result, min=0, max=1)
         if save:
             result = result.detach().cpu()
-            torchvision.io.write_png((result*255/result.max()).type(torch.uint8), out_path)
+            torchvision.io.write_png(result.type(torch.uint8), out_path)
 
-        result = torchvision.transforms.ToPILImage()((result*255/result.max()).type(torch.uint8))
+        result = torchvision.transforms.ToPILImage()(result)
         return result
     
     def init_pose(self):
