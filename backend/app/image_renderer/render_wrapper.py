@@ -8,7 +8,6 @@ from .camera_pos_utils import *
 from . import camera_pos_utils as camera
 import io
 
-
 from utils.graphics_utils import getWorld2View2, getProjectionMatrix
 
 
@@ -87,7 +86,7 @@ class GS_Model():
         self.gaussians = GaussianModel(3)  # 3 is the default sh-degree
         self.gaussians.load_ply(config["ply_path"])
 
-        bg_color = [1, 1, 1]
+        bg_color = [0.5, 0.5, 0.5]
         self.background = torch.tensor(bg_color, dtype=torch.float32, device=device)
 
     def get_flight_params(self, R, T):
@@ -108,7 +107,7 @@ class GS_Model():
 
         return altitude, heading
 
-    def render_view(self, cam: DummyCamera, save: bool = False, out_path: str = "./test.jpg"):
+    def render_view(self, cam: DummyCamera, save: bool = False, out_path: str = "./test.png"):
         """
         @param cam: DummyCamera object
         @param save: whether to save the image
@@ -118,11 +117,11 @@ class GS_Model():
 
         result = render(cam, self.gaussians, self.pipeline, self.background)["render"]
 
-        result = torchvision.transforms.ToPILImage()(result)
-
         if save:
-            result.save(out_path)
+            result = result.detach().cpu()
+            torchvision.io.write_png((result*255/result.max()).type(torch.uint8), out_path)
 
+        result = torchvision.transforms.ToPILImage()((result*255/result.max()).type(torch.uint8))
         return result
     
     def init_pose(self):
@@ -135,13 +134,13 @@ class GS_Model():
         R, T = camera.decompose_44(np.array(init_pose))
         return R, T
 
-    def configure_camera(self, R, T, width=800, height=600, fovx=1.4261863218, fovy=1.150908963):
+    def configure_camera(self, R, T, width=1000, height=1000, fovx=1.4261863218, fovy=1.261863218):
         return DummyCamera(R=R, T=T, W=width, H=height, FoVx=fovx, FoVy=fovy)
     
     def get_init_image(self):
         R, T = self.get_initial_camera_pose(self._R_mat, self._T_vec)  # Calculate the camera pose
         cam = self.configure_camera(R, T)  # Configure the camera
-        pil_image = self.render_view(cam)    
+        pil_image = self.render_view(cam)
         image_data = io.BytesIO()
         pil_image.save(image_data, "JPEG")
         image_data.seek(0)  # Move the cursor to the initial position for reading the image data
@@ -173,4 +172,4 @@ if __name__ == '__main__':
     print(cam.world_view_transform)
 
     print(model1.images.get_closest_n(cam.world_view_transform.cpu().detach().numpy()))
-    # model1.render_view(cam=cam, save=True, out_path="test_roty_90_dev.jpg")
+    model1.render_view(cam=cam, save=True, out_path="test.png")
