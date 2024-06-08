@@ -112,7 +112,7 @@ def configure_socketio(socketio: SocketIO):
         pose_data = model_manager.get_model_asset_pose(model_id, index)
         print(f'Asset pose for {model_id} model and index {index} is {pose_data}')
         R, T = np.array(eval(pose_data["R_mat"])), np.array(eval(pose_data["T_vec"]))
-        cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963)
+        cam = DummyCamera(R=R, T=T, W=1000, H=1000, FoVx=1.4261863218, FoVy=1.261863218)
         model = model_manager.get_model(model_id)
         img_data = model.render_model_image(cam)  # Render and save the model image  
         base64_img = make_base64_img(img_data)
