@@ -78,21 +78,10 @@ def configure_socketio(socketio: SocketIO):
                     
     @socketio.on('get_asset_pose')
     def handle_get_asset_pose(data):
-        model_id, index = data['selectedModelId'], data['index']
-        pose_data = model_manager.get_model_asset_pose(model_id, index)
-        print(f'Asset pose for {model_id} model and index {index} is {pose_data}')
-        R, T = np.array(eval(pose_data["R_mat"])), np.array(eval(pose_data["T_vec"]))
-        cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963)
-        model = model_manager.get_model(model_id)
-        img_data = model.render_model_image(cam)  # Render and save the model image  
-        base64_img = make_base64_img(img_data)
-        user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
-        print(f'Message to {user_name}: set_client_main_image')
-        data = {
-            'modelId': model_id,
-            'image': base64_img
-        }
-        emit('set_client_main_image', data)
+        model_ids, index = data['selectedModelId'], data['index']
+        for model_id in model_ids:
+            send_asset_data(model_id, index)
+
     
     # function for socket            
     def set_user_data(data):
@@ -117,6 +106,23 @@ def configure_socketio(socketio: SocketIO):
                     'init_pose': model.init_pose(),
                     'current_pose': model.init_pose()
                 }
+                  
+    # function for socket            
+    def send_asset_data(model_id, index):
+        pose_data = model_manager.get_model_asset_pose(model_id, index)
+        print(f'Asset pose for {model_id} model and index {index} is {pose_data}')
+        R, T = np.array(eval(pose_data["R_mat"])), np.array(eval(pose_data["T_vec"]))
+        cam = DummyCamera(R=R, T=T, W=800, H=600, FoVx=1.4261863218, FoVy=1.150908963)
+        model = model_manager.get_model(model_id)
+        img_data = model.render_model_image(cam)  # Render and save the model image  
+        base64_img = make_base64_img(img_data)
+        user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
+        print(f'Message to {user_name}: set_client_main_image')
+        data = {
+            'modelId': model_id,
+            'image': base64_img
+        }
+        emit('set_client_main_image', data)
 
 def calculate_altitude():
     # Select only one model for now
