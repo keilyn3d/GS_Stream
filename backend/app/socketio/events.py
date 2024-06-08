@@ -83,46 +83,46 @@ def configure_socketio(socketio: SocketIO):
             send_asset_data(model_id, index)
 
     
-    # function for socket            
-    def set_user_data(data):
-        global user_name
-        global model_ids
-        if 'userName' in data:
-            user_name = data['userName']
-            print(f'User:\'{user_name}\' connected')
-            emit('response', {'message': 'Setting User Name', 'userName': user_name})
-        if 'modelIds' in data and isinstance(data['modelIds'], list):
-            model_ids = data['modelIds']
-            print(f"Received model IDs: {model_ids}")
-            print(f"Number of models received: {len(model_ids)}")
+# function for socket            
+def set_user_data(data):
+    global user_name
+    global model_ids
+    if 'userName' in data:
+        user_name = data['userName']
+        print(f'User:\'{user_name}\' connected')
+        emit('response', {'message': 'Setting User Name', 'userName': user_name})
+    if 'modelIds' in data and isinstance(data['modelIds'], list):
+        model_ids = data['modelIds']
+        print(f"Received model IDs: {model_ids}")
+        print(f"Number of models received: {len(model_ids)}")
 
-    # function for socket            
-    def set_user_init_pose():
-        user_models = user_states.setdefault(request.sid, {})
-        for model_id in model_ids:
-            model = model_manager.get_model(model_id)
-            if model:
-                user_models[model_id] = {
-                    'init_pose': model.init_pose(),
-                    'current_pose': model.init_pose()
-                }
-                  
-    # function for socket            
-    def send_asset_data(model_id, index):
-        pose_data = model_manager.get_model_asset_pose(model_id, index)
-        print(f'Asset pose for {model_id} model and index {index} is {pose_data}')
-        R, T = np.array(eval(pose_data["R_mat"])), np.array(eval(pose_data["T_vec"]))
-        cam = DummyCamera(R=R, T=T, W=1000, H=1000, FoVx=1.4261863218, FoVy=1.261863218)
+# function for socket            
+def set_user_init_pose():
+    user_models = user_states.setdefault(request.sid, {})
+    for model_id in model_ids:
         model = model_manager.get_model(model_id)
-        img_data = model.render_model_image(cam)  # Render and save the model image  
-        base64_img = make_base64_img(img_data)
-        user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
-        print(f'Message to {user_name}: set_client_main_image')
-        data = {
-            'modelId': model_id,
-            'image': base64_img
-        }
-        emit('set_client_main_image', data)
+        if model:
+            user_models[model_id] = {
+                'init_pose': model.init_pose(),
+                'current_pose': model.init_pose()
+            }
+                  
+# function for socket            
+def send_asset_data(model_id, index):
+    pose_data = model_manager.get_model_asset_pose(model_id, index)
+    print(f'Asset pose for {model_id} model and index {index} is {pose_data}')
+    R, T = np.array(eval(pose_data["R_mat"])), np.array(eval(pose_data["T_vec"]))
+    cam = DummyCamera(R=R, T=T, W=1000, H=1000, FoVx=1.4261863218, FoVy=1.261863218)
+    model = model_manager.get_model(model_id)
+    img_data = model.render_model_image(cam)  # Render and save the model image  
+    base64_img = make_base64_img(img_data)
+    user_states[request.sid][model_id]['current_pose'] = cam.get_new_pose()
+    print(f'Message to {user_name}: set_client_main_image')
+    data = {
+        'modelId': model_id,
+        'image': base64_img
+    }
+    emit('set_client_main_image', data)
 
 def calculate_altitude():
     # Select only one model for now
