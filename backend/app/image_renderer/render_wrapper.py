@@ -147,9 +147,9 @@ class GS_Model():
         image_data.seek(0)  # Move the cursor to the initial position for reading the image data
         return image_data
     
-    def render_model_image(self, camera):
+    def render_model_image(self, cam):
         # Render the model image using the provided camera
-        pil_image = self.render_view(camera)
+        pil_image = self.render_view(cam)
         image_data = io.BytesIO()
         pil_image.save(image_data, "JPEG")
         image_data.seek(0)  # Move the cursor to the initial position for reading the image data
