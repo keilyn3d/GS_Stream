@@ -29,7 +29,7 @@ const SingleView = () => {
   const handleAssetButtonClick = (index) => {
     console.log('Asset Button Clicked: ', index);
     const data = {
-      selectedModelId: selectedModelId,
+      selectedModelId: [selectedModelId],
       index: index,
     };
     socketRef.current.emit('get_asset_pose', data);
