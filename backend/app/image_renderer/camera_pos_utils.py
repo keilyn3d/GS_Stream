@@ -61,6 +61,7 @@ def get_dji_meta(filepath: str) -> dict:
 
     return xmp_dict
 
+
 class ImagesMeta:
     def __init__(self, file):
         self.img_id = []
@@ -77,8 +78,12 @@ class ImagesMeta:
                         str_parsed = line.split()
                         self.img_id.append(str_parsed[0])
                         self.files.append(str_parsed[9])
-                        self.t_vec.append(str_parsed[5:8])
-                        self.q_vec.append(str_parsed[1:5])
+                        q_raw = np.array(str_parsed[1:5], dtype=np.float32)
+                        R_raw = self.qvec2rotmat(q_raw)
+                        t_raw = np.array(str_parsed[5:8], dtype=np.float32)
+                        t_raw = (-R_raw.T @ t_raw)
+                        self.q_vec.append(q_raw)
+                        self.t_vec.append(t_raw)
 
         self.q_vec = np.array(self.q_vec, dtype=np.float32)
         self.t_vec = np.array(self.t_vec, dtype=np.float32)
@@ -90,28 +95,72 @@ class ImagesMeta:
         :return: list of image filenames
         """
         R, t = decompose_44(pose)
-        R = Rotation.from_matrix(R)
-        R = R.as_quat()[[3, 0, 1, 2]]  # Change from x,y,z,w to w,x,y,z
+
+        t = np.matmul(-R, t)
+
+        #R = Rotation.from_matrix(R)
+        #R = R.as_quat()[[3, 0, 1, 2]]  # Change from x,y,z,w to w,x,y,z
 
         # First filter cameras by translation
         t_dist = np.linalg.norm(self.t_vec - t, axis=1)
 
-        lowest_t_idx = np.argsort(t_dist)[0:(2 * n)]  # Find the closest 2*n idxs
+        lowest_t_idx = np.argsort(t_dist)[0:n]  # Find the closest 2*n idxs
         filtered_files = [self.files[i] for i in lowest_t_idx.tolist()]
 
-        # Then rank by camera translation
-        filtered_q_vec = self.q_vec[lowest_t_idx]
-        q_dist = np.linalg.norm(filtered_q_vec - R, axis=1)
-        lowest_q_idx = np.argsort(q_dist)[0:n]
-        q_filtered_files = [filtered_files[i] for i in lowest_q_idx.tolist()]
+        # Then rank by camera rotation (Depreciated June 18 2024, fixed closes images bug.)
+        #filtered_q_vec = self.q_vec[lowest_t_idx]
+        #q_dist = np.linalg.norm(filtered_q_vec - R, axis=1)
+        #lowest_q_idx = np.argsort(q_dist)[0:n]
+        #q_filtered_files = [filtered_files[i] for i in lowest_q_idx.tolist()]
+        #return q_filtered_files
 
-        return q_filtered_files
+        return filtered_files
 
     def get_pose_by_filename(self, filename):
         idx = self.files.index(filename)
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
         R = np.linalg.inv(R)
         return compose_44(R, self.t_vec[idx])
+
+    def qvec2rotmat(self, qvec):
+        return np.array(
+            [
+                [
+                    1 - 2 * qvec[2] ** 2 - 2 * qvec[3] ** 2,
+                    2 * qvec[1] * qvec[2] - 2 * qvec[0] * qvec[3],
+                    2 * qvec[3] * qvec[1] + 2 * qvec[0] * qvec[2],
+                ],
+                [
+                    2 * qvec[1] * qvec[2] + 2 * qvec[0] * qvec[3],
+                    1 - 2 * qvec[1] ** 2 - 2 * qvec[3] ** 2,
+                    2 * qvec[2] * qvec[3] - 2 * qvec[0] * qvec[1],
+                ],
+                [
+                    2 * qvec[3] * qvec[1] - 2 * qvec[0] * qvec[2],
+                    2 * qvec[2] * qvec[3] + 2 * qvec[0] * qvec[1],
+                    1 - 2 * qvec[1] ** 2 - 2 * qvec[2] ** 2,
+                ],
+            ]
+        )
+
+    def rotmat2qvec(self, R):
+        Rxx, Ryx, Rzx, Rxy, Ryy, Rzy, Rxz, Ryz, Rzz = R.flat
+        K = (
+                np.array(
+                    [
+                        [Rxx - Ryy - Rzz, 0, 0, 0],
+                        [Ryx + Rxy, Ryy - Rxx - Rzz, 0, 0],
+                        [Rzx + Rxz, Rzy + Ryz, Rzz - Rxx - Ryy, 0],
+                        [Ryz - Rzy, Rzx - Rxz, Rxy - Ryx, Rxx + Ryy + Rzz],
+                    ]
+                )
+                / 3.0
+        )
+        eigvals, eigvecs = np.linalg.eigh(K)
+        qvec = eigvecs[[3, 0, 1, 2], np.argmax(eigvals)]
+        if qvec[0] < 0:
+            qvec *= -1
+        return qvec
 
 
 def compose_44(r, t):
