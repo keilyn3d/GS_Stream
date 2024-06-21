@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { UserContext } from '../Common/UserContext';
+import { UserContext } from '../../Common/UserContext';
 
 const DualViewUserInfo = () => {
   const { userName, leftModelName, rightModelName } = useContext(UserContext);
