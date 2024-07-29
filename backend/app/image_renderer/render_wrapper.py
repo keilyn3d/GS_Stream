@@ -1,14 +1,13 @@
-import torch
-import yaml
-import os
-from gaussian_renderer import render
-import torchvision
-from gaussian_renderer import GaussianModel
-from .camera_pos_utils import *
-from . import camera_pos_utils as camera
 import io
+import yaml
 
-from utils.graphics_utils import getWorld2View2, getProjectionMatrix
+import numpy as np
+import torch
+import torchvision
+
+from gaussian_renderer import GaussianModel, render
+from utils.graphics_utils import getProjectionMatrix, getWorld2View2
+from .camera_pos_utils import compose_44, decompose_44
 
 
 class DummyPipeline:
@@ -127,12 +126,12 @@ class GS_Model():
     
     def init_pose(self):
         print(f"wrapper: {self._R_mat}, {self._T_vec}")
-        init_pose = camera.compose_44(self._R_mat, self._T_vec)
+        init_pose = compose_44(self._R_mat, self._T_vec)
         return init_pose
     
     def get_initial_camera_pose(self, R_mat, T_vec):
-        init_pose = camera.compose_44(R_mat, T_vec)
-        R, T = camera.decompose_44(np.array(init_pose))
+        init_pose = compose_44(R_mat, T_vec)
+        R, T = decompose_44(np.array(init_pose))
         return R, T
 
     def configure_camera(self, R, T, width=1000, height=1000, fovx=1.4261863218, fovy=1.261863218):
