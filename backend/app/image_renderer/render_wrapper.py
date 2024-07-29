@@ -7,8 +7,7 @@ import torchvision
 
 from gaussian_renderer import GaussianModel, render
 from utils.graphics_utils import getProjectionMatrix, getWorld2View2
-from .camera_pos_utils import compose_44, decompose_44
-
+from .camera_pos_utils import ImagesMeta, compose_44, decompose_44, pt_2_plane_dist, r_2_yaw
 
 class DummyPipeline:
     convert_SHs_python = False
@@ -157,6 +156,10 @@ class GS_Model():
 
 
 if __name__ == '__main__':
+    from .camera_pos_utils import rotate4, translate4
+    from ..model_config.model_config_fetcher import ModelManager
+    model_manager = ModelManager()
+    
     model1 = GS_Model(
         config_path="/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/config.yaml")
 
