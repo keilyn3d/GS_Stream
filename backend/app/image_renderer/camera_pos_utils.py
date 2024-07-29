@@ -68,6 +68,7 @@ class ImagesMeta:
         self.files = []
         self.t_vec = []
         self.q_vec = []
+        self.cam_centers = []
 
         with open(file, 'r') as f:
             for count, line in enumerate(f, start=0):
@@ -81,9 +82,10 @@ class ImagesMeta:
                         q_raw = np.array(str_parsed[1:5], dtype=np.float32)
                         R_raw = self.qvec2rotmat(q_raw)
                         t_raw = np.array(str_parsed[5:8], dtype=np.float32)
-                        t_raw = (-R_raw.T @ t_raw)
+                        cam_center = (-R_raw.T @ t_raw)
                         self.q_vec.append(q_raw)
                         self.t_vec.append(t_raw)
+                        self.cam_centers.append(cam_center)
 
         self.q_vec = np.array(self.q_vec, dtype=np.float32)
         self.t_vec = np.array(self.t_vec, dtype=np.float32)
@@ -102,7 +104,7 @@ class ImagesMeta:
         #R = R.as_quat()[[3, 0, 1, 2]]  # Change from x,y,z,w to w,x,y,z
 
         # First filter cameras by translation
-        t_dist = np.linalg.norm(self.t_vec - t, axis=1)
+        t_dist = np.linalg.norm(self.cam_centers - t, axis=1)
 
         lowest_t_idx = np.argsort(t_dist)[0:n]  # Find the closest 2*n idxs
         filtered_files = [self.files[i] for i in lowest_t_idx.tolist()]
@@ -120,7 +122,7 @@ class ImagesMeta:
         idx = self.files.index(filename)
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
         R = np.linalg.inv(R)
-        return compose_44(R, self.t_vec[idx])
+        return compose_44(R, self.cam_centers[idx])
 
     def qvec2rotmat(self, qvec):
         return np.array(
