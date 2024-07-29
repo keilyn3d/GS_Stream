@@ -156,23 +156,37 @@ class GS_Model():
 
 
 if __name__ == '__main__':
-    from .camera_pos_utils import rotate4, translate4
-    from ..model_config.model_config_fetcher import ModelManager
-    model_manager = ModelManager()
+    from backend.app.model_config.model_config_fetcher import model_manager
     
-    model1 = GS_Model(
-        config_path="/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/config.yaml")
-
+    model_id = "101" # You can change this to any model id. This is just for testing purposes
+    model_manager.set_model(model_id)
+    model = model_manager.get_model(model_id)
+    
+    # The code below is for using config from the model_config_fetcher.py   
+    #
+    # config = model_manager.find_model_config(model_id)   
+    # R_mat = np.array(eval(config.R_mat))
+    # T_vec = np.array(eval(config.T_vec))
+    
+    # The code below is for custom R_mat and T_vec
     R_mat = np.array([[-0.70811329, -0.21124761, 0.67375813],
                       [0.16577646, 0.87778949, 0.4494483],
                       [-0.68636268, 0.42995355, -0.58655453]])
     T_vec = np.array([-0.32326042, -3.65895232, 2.27446875])
 
-    C2C_Rot = rotate4(np.radians(90), 0, 1, 0)
-    C2C_T = translate4(0, 0, 0)
+    # The code below is not needed for the current implementation, but I am keeping it here for reference 
+    # 
+    # import numpy as np
+    # from utils.graphics_utils import rotate4, translate4
+    # C2C_Rot = rotate4(np.radians(90), 0, 1, 0)
+    # C2C_T = translate4(0, 0, 0)
 
     cam = DummyCamera(R=R_mat, T=T_vec, W=1600, H=1200, FoVx=1.4261863218, FoVy=1.150908963)
-    print(cam.world_view_transform)
 
-    print(model1.images.get_closest_n(cam.world_view_transform.cpu().detach().numpy()))
-    model1.render_view(cam=cam, save=True, out_path="test.png")
+    print(cam.world_view_transform)
+    
+    print(model.images.get_closest_n(cam.world_view_transform.cpu().detach().numpy()))
+
+    model.render_view(cam=cam, save=True, out_path="test.png")
+    
+    print("Done")
