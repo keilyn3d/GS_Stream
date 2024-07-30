@@ -62,6 +62,168 @@ def get_dji_meta(filepath: str) -> dict:
     return xmp_dict
 
 
+def projection_3d_2d(pts3d_w, R_w_c, t_w_c, K):
+    """
+    This function projects 3d world points to 2d points of a given image.
+    :param pts3d_w: 3D points in world coordinates (pts3d_w --> (3, n)).
+    :param R_w_c: Rotation matrix as numpy array 3x3 assumed world to camera.
+    :param t_w_c: Translation vector as numpy array 3x1 assumed world to camera.
+    :param K: Camera intrinsic matrix as numpy array 3x3.
+    :return: 2D image points in the image (2, n)
+    """
+    # return cv2.projectPoints(np.float32(pts3d_w), R_w_c, t_w_c, K, None)[0].reshape(2, -1).T
+    pts2d = (K @ compose_44(R_w_c, t_w_c)[:3, :]) @ np.vstack([pts3d_w, np.ones(pts3d_w.shape[1])])
+    pts2d = pts2d / pts2d[2]
+    return pts2d[:2, :]
+
+
+def check_visible(pts_2d, w, h):
+    """
+    Check if all 2D point are visible in image
+    :param pts_2d: numpy array (2, n) where n is the number of points
+    :param w: int width of image
+    :param h: int height of image
+    :return: True if all 2D points are visible and exactly which are not visible
+    """
+    if pts_2d.shape[0] == 0:
+        return False
+
+    visible_bools = np.vstack(
+        [pts_2d[0, :] >= 0, pts_2d[0, :] < w, pts_2d[1, :] >= 0, pts_2d[1, :] < h]
+    )
+    visible_bool = np.all(visible_bools.reshape(-1))
+    return visible_bool, np.all(visible_bools, axis=0).reshape(1, -1)
+
+
+def inverse_projection(pts2d, D, K, R_w_c, t_w_c, w, h):
+    """
+    This function takes a set of 2D points in an image and projects them to 3D points in the world coordinate frame,
+    using the depth map D of the corresponding image, K camera intrinsic and the world to camera pose (R_w_c, t_w_c).
+    And returns the 3D points in world coordinate frame pts3d_w (3, n)
+
+    :param pts2d: [[u1; v1], [u2; v2], ..., [un; vn]] where u is column and v is row. Such that pts_2d is shape (2, n)
+    :param D: The depth map as numpy array (The depth map can be down-sampled and is handled by sx and sy)
+    :param K: The camera intrinsic matrix as numpy array 3x3
+    :param R_w_c: Rotation matrix as numpy array 3x3 assumed world to camera (i.e., Colmap R_W^C or R_w_c)
+    :param t_w_c: Translation vector as numpy array 3x1 assumed world to camera (i.e., Colmap R_W^C or t_w_c)
+    :param w: width of the image (px)
+    :param h: height of the image (px)
+    :return: 3D points in world coordinates (pts3d_w --> (3, n))
+    """
+    all_visible, _ = check_visible(pts2d, w, h)
+    if all_visible:
+        pass
+    else:
+        raise Exception("Sorry, Some Depth Points Are Not Available...")
+
+    sx = D.shape[1] / w
+    sy = D.shape[0] / h
+
+    u = pts2d[0, :] * sx
+    u = u.reshape(1, -1)
+    v = pts2d[1, :] * sy
+    v = v.reshape(1, -1)
+
+    fx = K[0, 0] * sx
+    fy = K[1, 1] * sy
+    cx = K[0, 2] * sx
+    cy = K[1, 2] * sy
+
+    d = D[tuple(np.array(v, dtype=int)), tuple(np.array(u, dtype=int))].reshape(1, -1)
+    u = u[d > 0]
+    v = v[d > 0]
+    d = d[d > 0]
+    d = d.reshape(-1)
+
+    z_c = np.array(d, dtype=np.float32)
+    x_c = z_c * (u - cx) / fx
+    y_c = z_c * (v - cy) / fy
+
+    pts3d_c = np.array([x_c, y_c, z_c, np.ones(x_c.shape[0])])
+
+    """
+    Initialize Camera to World Transformation Matrix
+    i.e., T_C^W in latex; W: is world C: is camera
+    """
+    T_c_w = np.eye(4)
+
+    """
+    We need to transform 3D points in the Camera coordinate system (pts3d_c)
+    to 3D points in the World coordinate system (pts3d_w) using T_c_w...
+    To find T_c_w we need to invert T_w_c, which we can do by via the following.
+    """
+    t_c_w = -R_w_c.T @ t_w_c
+    R_c_w = R_w_c.T
+
+    # Composing the camera to world transformation...
+    T_c_w[:3, :3] = R_c_w
+    T_c_w[:3, 3] = t_c_w
+
+    """
+    Using the T_c_w we can transform 3D points in the Camera coordinate system (pts3d_c) to 3D points in the World 
+    coordinate system (pts3d_w).
+    pts3d_w will be in homogenous coordinates so it is necessary to regularize by dividing by the last (4th) element.
+    """
+    pts3d_w = T_c_w.dot(pts3d_c)
+    pts3d_w = pts3d_w[:3] / pts3d_w[3]
+
+    return pts3d_w
+
+
+def check_occlusion(pts3d_w, depth, K, R_w_c, t_w_c, w, h, occlusion_tol=0):
+    """
+    check_occlusion takes a set of 3D points in world coordinates and checks if they are visible to the camera with
+    intrinsic matrix K, and pose defined by R_w_c and t_w_c (world to camera).
+    1. This function works by first projecting pts3d_w to camera frame,
+    2. check_visible...
+    3. Then at pts2d project to world using inverse_projection (pts3d_proj).
+    4. Calculate the z-vectors between pts3d_proj, pts3d and the camera center (t_c_w).
+    5. Use dot project sign of z-vectors to ensure the pts3d is not behind the image...
+    6. Finally, compare the distance between pts3d and pts3d_proj and t_c_w and if pts3d_proj is lower, return False.
+    The function should accept lists of 3D points and checks a single image.
+
+    :param pts3d_w: numpy array (3, n) where n is the number of points
+    :param depth: array depth image
+    :param K: array (3x3) camera matrix
+    :param R_w_c: Rotation matrix as numpy array 3x3 assumed world to camera (i.e., Colmap R_W^C or R_w_c)
+    :param t_w_c: Translation vector as numpy array 3x1 assumed world to camera (i.e., Colmap R_W^C or t_w_c)
+    :param occlusion_tol: float percentage tolerance (bleed)
+    :return: boolean array (n)
+    """
+
+    # 1. Project pts3d_w (annotations) to pts_2d
+    pts2d_proj = projection_3d_2d(pts3d_w, R_w_c, t_w_c, K)
+
+    # 2. Get a visible array of points
+    _, in_frame = check_visible(pts2d_proj, w, h)
+
+    # 3. Project pts2d_proj to 3D using the depth map
+    pts3d_w_proj = inverse_projection(pts2d_proj, depth, K, R_w_c, t_w_c, w, h)
+
+    # 4. Calculate Z-vectors
+    # 4.1 Calculate camera center (t_c_w)
+    t_c_w = -R_w_c.T @ t_w_c
+    # 4.2 Calculate Z-vectors
+    zvec_pts3d = pts3d_w - t_c_w[:, None]
+    zvec_pts3d_proj = pts3d_w_proj - t_c_w[:, None]
+
+    # 5. Check the sign of the dot product
+    zvec_dot = np.einsum('ij,ij->j', zvec_pts3d, zvec_pts3d_proj)
+    # Mask by if greater or less than 0. If greater than zero vector is in-front otherwise its behind...
+    # Merge with in_frame boolean variable with AND operator
+    in_frame = np.logical_and(in_frame, zvec_dot > 0)
+
+    # 6. Compare the magnitudes of zvec_pts3d and zvec_pts3d_proj with occlusion_tol
+    zvec_pts3d_mag = np.linalg.norm(zvec_pts3d, axis=0).reshape(1, -1)
+    zvec_pts3d_proj_mag = np.linalg.norm(zvec_pts3d_proj, axis=0).reshape(1, -1)
+    z_diff = zvec_pts3d_proj_mag - zvec_pts3d_mag
+    # z_tol tolerance
+    z_tol = zvec_pts3d_proj_mag * occlusion_tol
+    in_frame = np.logical_and(in_frame, z_diff > -z_tol)
+
+    return in_frame
+
+
 class ImagesMeta:
     def __init__(self, file):
         self.img_id = []
