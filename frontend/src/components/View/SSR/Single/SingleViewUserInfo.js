@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { UserContext } from '../Common/UserContext';
+import { UserContext } from '../../Common/UserContext';
 
 const SingleViewUserInfo = () => {
   const { userName, selectedModelName } = useContext(UserContext);

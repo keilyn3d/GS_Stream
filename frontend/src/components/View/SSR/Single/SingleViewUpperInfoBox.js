@@ -1,5 +1,5 @@
 import SingleViewUserInfo from './SingleViewUserInfo';
-import AssetContainer from '../Common/AssetButtonContainer';
+import AssetContainer from '../../Common/AssetButtonContainer';
 
 import 'styles/viewer_style.css';
 

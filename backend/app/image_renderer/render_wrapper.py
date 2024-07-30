@@ -1,15 +1,13 @@
-import torch
-import yaml
-import os
-from gaussian_renderer import render
-import torchvision
-from gaussian_renderer import GaussianModel
-from .camera_pos_utils import *
-from . import camera_pos_utils as camera
 import io
+import yaml
 
-from utils.graphics_utils import getWorld2View2, getProjectionMatrix
+import numpy as np
+import torch
+import torchvision
 
+from gaussian_renderer import GaussianModel, render
+from utils.graphics_utils import getProjectionMatrix, getWorld2View2
+from .camera_pos_utils import ImagesMeta, compose_44, decompose_44, pt_2_plane_dist, r_2_yaw
 
 class DummyPipeline:
     convert_SHs_python = False
@@ -127,12 +125,12 @@ class GS_Model():
     
     def init_pose(self):
         print(f"wrapper: {self._R_mat}, {self._T_vec}")
-        init_pose = camera.compose_44(self._R_mat, self._T_vec)
+        init_pose = compose_44(self._R_mat, self._T_vec)
         return init_pose
     
     def get_initial_camera_pose(self, R_mat, T_vec):
-        init_pose = camera.compose_44(R_mat, T_vec)
-        R, T = camera.decompose_44(np.array(init_pose))
+        init_pose = compose_44(R_mat, T_vec)
+        R, T = decompose_44(np.array(init_pose))
         return R, T
 
     def configure_camera(self, R, T, width=1000, height=1000, fovx=1.4261863218, fovy=1.261863218):
@@ -158,19 +156,37 @@ class GS_Model():
 
 
 if __name__ == '__main__':
-    model1 = GS_Model(
-        config_path="/home/cviss/PycharmProjects/GS_Stream/output/dab812a2-1/point_cloud/iteration_30000/config.yaml")
-
+    from backend.app.model_config.model_config_fetcher import model_manager
+    
+    model_id = "101" # You can change this to any model id. This is just for testing purposes
+    model_manager.set_model(model_id)
+    model = model_manager.get_model(model_id)
+    
+    # The code below is for using config from the model_config_fetcher.py   
+    #
+    # config = model_manager.find_model_config(model_id)   
+    # R_mat = np.array(eval(config.R_mat))
+    # T_vec = np.array(eval(config.T_vec))
+    
+    # The code below is for custom R_mat and T_vec
     R_mat = np.array([[-0.70811329, -0.21124761, 0.67375813],
                       [0.16577646, 0.87778949, 0.4494483],
                       [-0.68636268, 0.42995355, -0.58655453]])
     T_vec = np.array([-0.32326042, -3.65895232, 2.27446875])
 
-    C2C_Rot = rotate4(np.radians(90), 0, 1, 0)
-    C2C_T = translate4(0, 0, 0)
+    # The code below is not needed for the current implementation, but I am keeping it here for reference 
+    # 
+    # import numpy as np
+    # from utils.graphics_utils import rotate4, translate4
+    # C2C_Rot = rotate4(np.radians(90), 0, 1, 0)
+    # C2C_T = translate4(0, 0, 0)
 
     cam = DummyCamera(R=R_mat, T=T_vec, W=1600, H=1200, FoVx=1.4261863218, FoVy=1.150908963)
-    print(cam.world_view_transform)
 
-    print(model1.images.get_closest_n(cam.world_view_transform.cpu().detach().numpy()))
-    model1.render_view(cam=cam, save=True, out_path="test.png")
+    print(cam.world_view_transform)
+    
+    print(model.images.get_closest_n(cam.world_view_transform.cpu().detach().numpy()))
+
+    model.render_view(cam=cam, save=True, out_path="test.png")
+    
+    print("Done")

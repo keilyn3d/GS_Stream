@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from './components/Main/Index';
-import SingleView from './components/View/Single/SingleView';
-import DualView from 'components/View/Dual/DualView';
+import SingleView from './components/View/SSR/Single/SingleView';
+import DualView from './components/View/SSR/Dual/DualView';
 
 function App() {
   return (
