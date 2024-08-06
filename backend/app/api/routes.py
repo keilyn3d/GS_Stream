@@ -5,7 +5,7 @@ model_manager = ModelManager()
 
 api_blueprint = Blueprint('api', __name__)
 
-@api_blueprint.route('/codes', methods=['GET'])
+@api_blueprint.route('/model_ids', methods=['GET'])
 def get_model_ids():
     model_ids_and_names = model_manager.get_model_ids_and_names()
     reseponse = [{'id': id, 'model_name': name} for id, name in model_ids_and_names]
@@ -17,6 +17,7 @@ def get_initial_data(model_id):
     model_manager.set_model(model_id)
     initial_data = model_manager.get_model_config_data(model_id)
     return jsonify(initial_data)
+
 
 @api_blueprint.route('/models/configs', methods=['GET'])
 def get_multiple_model_data():

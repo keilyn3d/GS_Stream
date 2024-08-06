@@ -25,7 +25,7 @@ const Index = () => {
         return;
       }
 
-      fetch(backendAddress + '/api/codes')
+      fetch(backendAddress + '/api/model_ids')
         .then((response) => response.json())
         .then((data) => {
           // Only update state if data has changed
