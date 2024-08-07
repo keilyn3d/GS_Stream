@@ -1,7 +1,7 @@
 // StepControl.js
 import React from 'react';
 
-const StepControl = ({ step, decreaseStep, increaseStep, message }) => (
+const StepControl = ({ step, decreaseStep, increaseStep }) => (
   <div className="step-control">
     <span>Step:</span>
     <button id="decrease" onClick={decreaseStep}>
