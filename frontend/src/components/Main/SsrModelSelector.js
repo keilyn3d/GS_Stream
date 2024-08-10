@@ -1,7 +1,6 @@
 import React from 'react';
 
 const SsrModelSelector = ({
-  setUserName,
   selectedModelId,
   setSelectedModelId,
   setSelectedModelName,
@@ -21,58 +20,53 @@ const SsrModelSelector = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="buttons">
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <label htmlFor="email">Please Enter Email:</label>
-        <input
-          type="text"
-          placeholder="something@gmail.com"
-          name="name"
-          id="email"
-          onChange={(e) => setUserName(e.target.value)}
-        />
-      </div>
+    <div className="model-selector">
       <p>
         If you select one model, you will go to the single view, and if you
         select two models, you will go to the dual view.
       </p>
-      <div className="join">
-        <select
-          name="model"
-          value={selectedModelId}
-          onChange={handleModelChange(setSelectedModelId, setSelectedModelName)}
-        >
-          <option value="">Please select a model</option>
+      <form onSubmit={handleSubmit} className="buttons">
+        <div className="join">
+          <select
+            name="model"
+            value={selectedModelId}
+            onChange={handleModelChange(
+              setSelectedModelId,
+              setSelectedModelName,
+            )}
+          >
+            <option value="">Please select a model</option>
 
-          {allModels.map((model) => (
-            <option key={model.id} value={model.id}>
-              {model.model_name}
-            </option>
-          ))}
-        </select>
+            {allModels.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.model_name}
+              </option>
+            ))}
+          </select>
 
-        <select
-          name="model-for-comparison"
-          value={selectedModelIdForComparison}
-          onChange={handleModelChange(
-            setSelectedModelIdForComparison,
-            setSelectedModelNameForComparison,
-          )}
-          disabled={!selectedModelId}
-        >
-          <option value="">Please select a model</option>
+          <select
+            name="model-for-comparison"
+            value={selectedModelIdForComparison}
+            onChange={handleModelChange(
+              setSelectedModelIdForComparison,
+              setSelectedModelNameForComparison,
+            )}
+            disabled={!selectedModelId}
+          >
+            <option value="">Please select a model</option>
 
-          {allModels.map((model) => (
-            <option key={model.id} value={model.id}>
-              {model.model_name}
-            </option>
-          ))}
-        </select>
-        <button type="submit" name="join">
-          Connect
-        </button>
-      </div>
-    </form>
+            {allModels.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.model_name}
+              </option>
+            ))}
+          </select>
+          <button type="submit" name="join">
+            Connect
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
