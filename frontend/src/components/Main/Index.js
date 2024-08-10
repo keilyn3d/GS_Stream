@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import '../../styles/style.css';
+
 import { useNavigate } from 'react-router-dom';
+
+import '../../styles/style.css';
+
 import Title from './MainTitle';
+import EmailInputForm from './EmailInputForm';
 import SsrModelSelector from './SsrModelSelector';
+import WebglModelSelector from './WebglModelSelector';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -48,7 +53,7 @@ const Index = () => {
   }, [backendAddress, isSubmitting]);
   console.log(allModels);
 
-  const fetchConfig = async (modelId) => {
+  const fetchConfig = async () => {
     try {
       const apiUrl = selectedModelIdForComparison
         ? `${backendAddress}/api/models/configs?ids=${selectedModelId},${selectedModelIdForComparison}`
@@ -64,7 +69,6 @@ const Index = () => {
       if (!response.ok) {
         throw new Error('Server response was not ok');
       }
-
       return await response.json();
     } catch (error) {
       console.error('Fetching config failed', error);
@@ -72,7 +76,7 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = async (event) => {
+  const handleSsrModelSubmit = async (event) => {
     event.preventDefault();
 
     if (!selectedModelId) {
@@ -83,7 +87,7 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
-      const config = await fetchConfig(selectedModelId);
+      const config = await fetchConfig();
       const route = selectedModelIdForComparison
         ? '/dual-view'
         : '/single-view';
@@ -106,20 +110,70 @@ const Index = () => {
     }
   };
 
+  const fetchWebglModel = async () => {
+    try {
+      const apiUrl = `${backendAddress}/api/models/splat/rch`;
+      console.log(apiUrl);
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Server response was not ok');
+      }
+      return await response.blob();
+    } catch (error) {
+      console.error('Fetching splat model failed', error);
+      throw error; // Ensure the error is propagated if necessary
+    }
+  };
+
+  const handleWebglModelSubmit = async (event) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const response = await fetchWebglModel();
+      const route = '/webgl/single-view';
+      const state = {
+        userName,
+        response,
+      };
+      console.log('Navigating to:', route);
+      navigate(route, { state });
+    } catch (error) {
+      console.error('Error handling submit', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div>
       <Title />
-      <SsrModelSelector
-        setUserName={setUserName}
-        selectedModelId={selectedModelId}
-        setSelectedModelId={setSelectedModelId}
-        setSelectedModelName={setSelectedModelName}
-        selectedModelIdForComparison={selectedModelIdForComparison}
-        setSelectedModelIdForComparison={setSelectedModelIdForComparison}
-        setSelectedModelNameForComparison={setSelectedModelNameForComparison}
-        allModels={allModels}
-        handleSubmit={handleSubmit}
-      />
+      <EmailInputForm setUserName={setUserName} />
+      <div className="divider"></div>
+      <div className="section">
+        <h2> Server-Side Rendering(SSR) Model Selector</h2>
+        <SsrModelSelector
+          selectedModelId={selectedModelId}
+          setSelectedModelId={setSelectedModelId}
+          setSelectedModelName={setSelectedModelName}
+          selectedModelIdForComparison={selectedModelIdForComparison}
+          setSelectedModelIdForComparison={setSelectedModelIdForComparison}
+          setSelectedModelNameForComparison={setSelectedModelNameForComparison}
+          allModels={allModels}
+          handleSubmit={handleSsrModelSubmit}
+        />
+      </div>
+      <div className="divider"></div>
+      <div className="section">
+        <h2>WebGL Rendering Model Selector</h2>
+        <WebglModelSelector handleSubmit={handleWebglModelSubmit} />
+      </div>
+      <div className="divider"></div>
     </div>
   );
 };
