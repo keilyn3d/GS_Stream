@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, send_file, request
 from ..model_config.model_config_fetcher import ModelManager
 
 model_manager = ModelManager()
@@ -39,3 +39,18 @@ def get_multiple_model_data():
             results.append({'model_id': model_id, 'error': 'Data not found'})
 
     return jsonify(results)
+
+@api_blueprint.route('/models/splat/rch', methods=['GET'])
+def get_splat_model_data():
+    import os
+    splat_model_repo_path = os.environ.get('GS_SPLAT_MODEL_REPO_PATH')
+    file_path = splat_model_repo_path + "rch.splat"
+    
+    if splat_model_repo_path == "/your/path/to/splat-model-repo":
+        print ("!!!!!!!!!!!!!!!!!!!!!! Please set GS_SPLAT_MODEL_REPO_PATH environment variable !!!!!!!!!!!!!!!!!!!!!")
+        return "Please set GS_SPLAT_MODEL_REPO_PATH environment variable", 404
+    
+    if os.path.exists(file_path):
+        return send_file(file_path, as_attachment=True)
+    else:
+        return "File not found", 404
