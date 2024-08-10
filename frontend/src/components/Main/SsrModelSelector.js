@@ -25,8 +25,8 @@ const SsrModelSelector = ({
         If you select one model, you will go to the single view, and if you
         select two models, you will go to the dual view.
       </p>
-      <form onSubmit={handleSubmit} className="buttons">
-        <div className="join">
+      <form onSubmit={handleSubmit} className="form-action">
+        <div className="selection-container">
           <select
             name="model"
             value={selectedModelId}
@@ -61,7 +61,7 @@ const SsrModelSelector = ({
               </option>
             ))}
           </select>
-          <button type="submit" name="join">
+          <button type="submit" name="connect">
             Connect
           </button>
         </div>
