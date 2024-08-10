@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../../styles/style.css';
 import { useNavigate } from 'react-router-dom';
 import Title from './MainTitle';
+import SsrModelSelector from './SsrModelSelector';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -108,65 +109,17 @@ const Index = () => {
   return (
     <div>
       <Title />
-      <form onSubmit={handleSubmit} className="buttons">
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <label>Please Enter Email:</label>
-          <input
-            type="text"
-            placeholder="something@gmail.com"
-            name="name"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-          />
-        </div>
-        If you select one model, you will go to the single view, and if you
-        select two models, you will go to the dual view.
-        <div className="join">
-          <select
-            name="model"
-            value={selectedModelId}
-            onChange={(e) => {
-              const selectedIndex = e.target.options.selectedIndex;
-              const selectedText = e.target.options[selectedIndex].text;
-
-              setSelectedModelId(e.target.value);
-              setSelectedModelName(selectedText);
-            }}
-          >
-            <option value="">Please select a model</option>
-
-            {allModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.model_name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="model-for-comparison"
-            value={selectedModelIdForComparison}
-            onChange={(e) => {
-              const selectedIndex = e.target.options.selectedIndex;
-              const selectedText = e.target.options[selectedIndex].text;
-
-              setSelectedModelIdForComparison(e.target.value);
-              setSelectedModelNameForComparison(selectedText);
-            }}
-            disabled={!selectedModelId}
-          >
-            <option value="">Please select a model</option>
-
-            {allModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.model_name}
-              </option>
-            ))}
-          </select>
-          <button type="submit" name="join">
-            Connect
-          </button>
-        </div>
-      </form>
+      <SsrModelSelector
+        setUserName={setUserName}
+        selectedModelId={selectedModelId}
+        setSelectedModelId={setSelectedModelId}
+        setSelectedModelName={setSelectedModelName}
+        selectedModelIdForComparison={selectedModelIdForComparison}
+        setSelectedModelIdForComparison={setSelectedModelIdForComparison}
+        setSelectedModelNameForComparison={setSelectedModelNameForComparison}
+        allModels={allModels}
+        handleSubmit={handleSubmit}
+      />
     </div>
   );
 };
