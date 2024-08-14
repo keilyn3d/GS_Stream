@@ -8,8 +8,8 @@ api_blueprint = Blueprint('api', __name__)
 @api_blueprint.route('/model_ids', methods=['GET'])
 def get_model_ids():
     model_ids_and_names = model_manager.get_model_ids_and_names()
-    reseponse = [{'id': id, 'model_name': name} for id, name in model_ids_and_names]
-    return jsonify(reseponse)
+    response = [{'id': id, 'model_name': name} for id, name in model_ids_and_names]
+    return jsonify(response)
 
 
 @api_blueprint.route('/models/<model_id>/config', methods=['GET'])
@@ -40,15 +40,31 @@ def get_multiple_model_data():
 
     return jsonify(results)
 
-@api_blueprint.route('/models/splat/rch', methods=['GET'])
-def get_splat_model_data():
+
+# Temporary code to serve splat models
+splat_models = [
+    {"id": "101", "name": "st_comb/st_1", "file": "st_1.splat"},
+    {"id": "102", "name": "st_comb/st_2", "file": "st_2.splat"},
+    {"id": "103", "name": "RCH", "file": "rch.splat"}
+]
+
+@api_blueprint.route('/models/splat/list', methods=['GET'])
+def get_splat_models_list():
+    return jsonify(splat_models)
+
+
+@api_blueprint.route('/models/splat/<splat_model_id>', methods=['GET'])
+def get_splat_model_data(splat_model_id):
     import os
-    splat_model_repo_path = os.environ.get('GS_SPLAT_MODEL_REPO_PATH')
-    file_path = splat_model_repo_path + "rch.splat"
+    SPLAT_MODELS_DIRECTORY = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        'splat_models'
+    ) + os.sep    
+    model_file = next((model["file"] for model in splat_models if model["id"] == splat_model_id), None)
+    if model_file is None:
+        return "Model not found", 404
     
-    if splat_model_repo_path == "/your/path/to/splat-model-repo":
-        print ("!!!!!!!!!!!!!!!!!!!!!! Please set GS_SPLAT_MODEL_REPO_PATH environment variable !!!!!!!!!!!!!!!!!!!!!")
-        return "Please set GS_SPLAT_MODEL_REPO_PATH environment variable", 404
+    file_path = SPLAT_MODELS_DIRECTORY + model_file
     
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)

@@ -110,9 +110,9 @@ const Index = () => {
     }
   };
 
-  const fetchWebglModel = async () => {
+  const fetchWebglModel = async (modelId) => {
     try {
-      const apiUrl = `${backendAddress}/api/models/splat/rch`;
+      const apiUrl = `${backendAddress}/api/models/splat/${modelId}`;
       console.log(apiUrl);
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -131,11 +131,10 @@ const Index = () => {
     }
   };
 
-  const handleWebglModelSubmit = async (event) => {
-    event.preventDefault();
+  const handleWebglModelSubmit = async (modelId) => {
     setIsSubmitting(true);
     try {
-      const response = await fetchWebglModel();
+      const response = await fetchWebglModel(modelId);
       const route = '/webgl/single-view';
       const state = {
         userName,
