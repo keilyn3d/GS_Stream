@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const WebglModelSelector = ({ handleSubmit }) => {
-  const backendAddress = process.env.REACT_APP_BACKEND_URL;
+  const backendAddress = process.env.REACT_APP_CSR_BACKEND_URL;
 
   const [splatModels, setSplatModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState('');
