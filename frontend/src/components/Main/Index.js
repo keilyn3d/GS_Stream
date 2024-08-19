@@ -13,6 +13,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   const backendAddress = process.env.REACT_APP_BACKEND_URL;
+  const backendCsrAddress = process.env.REACT_APP_CSR_BACKEND_URL;
 
   const [userName, setUserName] = useState('');
   const [selectedModelId, setSelectedModelId] = useState('');
@@ -112,7 +113,7 @@ const Index = () => {
 
   const fetchWebglModel = async (modelId) => {
     try {
-      const apiUrl = `${backendAddress}/api/models/splat/${modelId}`;
+      const apiUrl = `${backendCsrAddress}/api/models/splat/${modelId}`;
       console.log(apiUrl);
       const response = await fetch(apiUrl, {
         method: 'GET',
