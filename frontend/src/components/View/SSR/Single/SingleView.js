@@ -2,14 +2,14 @@ import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import useSocket from './SingleViewSocket';
 
-import { useKeyControl } from '../../Common/UseKeyControl';
+import { useKeyControl } from '../CommonSSR/UseKeyControl';
 
 import { UserContext } from '../../Common/UserContext';
 
 import 'styles/viewer_style.css';
 import SingleViewHeader from './SingleViewHeader';
 import SingleViewUpperInfoBox from './SingleViewUpperInfoBox';
-import CanvasContainer from '../../Common/CanvasContainer';
+import CanvasContainer from '../CommonSSR/CanvasContainer';
 import ResetButton from '../../Common/ResetButton';
 import StepControl from '../../Common/StepControl';
 import InformationBox from '../../Common/InformationBox';

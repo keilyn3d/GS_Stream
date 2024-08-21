@@ -9,7 +9,48 @@
     text-align: center;
 }
 
-.buttons{
+.email-input-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.divider {
+    height: 2px; 
+    background-color: #ccc;
+    width: 70%; 
+    margin: 20px auto; 
+  }
+  
+.section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+} 
+
+.section h2 {
+    margin-top: 0px;
+    margin-bottom: 1px;
+}
+
+.model-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+}
+
+.model-selector p {
+    margin-top: 0px;
+    margin-bottom: 10px;
+}  
+
+.form-action{
     display: flex;
     flex-direction: column;
     align-items: center;

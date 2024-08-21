@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import '../../styles/style.css';
+
 import { useNavigate } from 'react-router-dom';
+
+import '../../styles/style.css';
+
 import Title from './MainTitle';
+import EmailInputForm from './EmailInputForm';
+import SsrModelSelector from './SsrModelSelector';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -25,7 +30,7 @@ const Index = () => {
         return;
       }
 
-      fetch(backendAddress + '/api/codes')
+      fetch(backendAddress + '/api/model_ids')
         .then((response) => response.json())
         .then((data) => {
           // Only update state if data has changed
@@ -47,7 +52,7 @@ const Index = () => {
   }, [backendAddress, isSubmitting]);
   console.log(allModels);
 
-  const fetchConfig = async (modelId) => {
+  const fetchConfig = async () => {
     try {
       const apiUrl = selectedModelIdForComparison
         ? `${backendAddress}/api/models/configs?ids=${selectedModelId},${selectedModelIdForComparison}`
@@ -63,7 +68,6 @@ const Index = () => {
       if (!response.ok) {
         throw new Error('Server response was not ok');
       }
-
       return await response.json();
     } catch (error) {
       console.error('Fetching config failed', error);
@@ -71,7 +75,7 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = async (event) => {
+  const handleSsrModelSubmit = async (event) => {
     event.preventDefault();
 
     if (!selectedModelId) {
@@ -82,7 +86,7 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
-      const config = await fetchConfig(selectedModelId);
+      const config = await fetchConfig();
       const route = selectedModelIdForComparison
         ? '/dual-view'
         : '/single-view';
@@ -108,65 +112,22 @@ const Index = () => {
   return (
     <div>
       <Title />
-      <form onSubmit={handleSubmit} className="buttons">
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <label>Please Enter Email:</label>
-          <input
-            type="text"
-            placeholder="something@gmail.com"
-            name="name"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-          />
-        </div>
-        If you select one model, you will go to the single view, and if you
-        select two models, you will go to the dual view.
-        <div className="join">
-          <select
-            name="model"
-            value={selectedModelId}
-            onChange={(e) => {
-              const selectedIndex = e.target.options.selectedIndex;
-              const selectedText = e.target.options[selectedIndex].text;
-
-              setSelectedModelId(e.target.value);
-              setSelectedModelName(selectedText);
-            }}
-          >
-            <option value="">Please select a model</option>
-
-            {allModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.model_name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="model-for-comparison"
-            value={selectedModelIdForComparison}
-            onChange={(e) => {
-              const selectedIndex = e.target.options.selectedIndex;
-              const selectedText = e.target.options[selectedIndex].text;
-
-              setSelectedModelIdForComparison(e.target.value);
-              setSelectedModelNameForComparison(selectedText);
-            }}
-            disabled={!selectedModelId}
-          >
-            <option value="">Please select a model</option>
-
-            {allModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.model_name}
-              </option>
-            ))}
-          </select>
-          <button type="submit" name="join">
-            Connect
-          </button>
-        </div>
-      </form>
+      <EmailInputForm setUserName={setUserName} />
+      <div className="divider"></div>
+      <div className="section">
+        <h2> Server-Side Rendering(SSR) Model Selector</h2>
+        <SsrModelSelector
+          selectedModelId={selectedModelId}
+          setSelectedModelId={setSelectedModelId}
+          setSelectedModelName={setSelectedModelName}
+          selectedModelIdForComparison={selectedModelIdForComparison}
+          setSelectedModelIdForComparison={setSelectedModelIdForComparison}
+          setSelectedModelNameForComparison={setSelectedModelNameForComparison}
+          allModels={allModels}
+          handleSubmit={handleSsrModelSubmit}
+        />
+      </div>
+      <div className="divider"></div>
     </div>
   );
 };
