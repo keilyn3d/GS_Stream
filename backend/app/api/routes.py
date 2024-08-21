@@ -8,8 +8,8 @@ api_blueprint = Blueprint('api', __name__)
 @api_blueprint.route('/model_ids', methods=['GET'])
 def get_model_ids():
     model_ids_and_names = model_manager.get_model_ids_and_names()
-    reseponse = [{'id': id, 'model_name': name} for id, name in model_ids_and_names]
-    return jsonify(reseponse)
+    response = [{'id': id, 'model_name': name} for id, name in model_ids_and_names]
+    return jsonify(response)
 
 
 @api_blueprint.route('/models/<model_id>/config', methods=['GET'])
