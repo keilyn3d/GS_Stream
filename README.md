@@ -14,58 +14,38 @@ This viewer can simply run with a .ply file however additional inputs are necess
 
 ## Entrypoint:
 
-To launch locally simply run... (You do need to install the gaussian splatting environment see below...)
-``` bash
-python main.py
-```
+To launch locally, follow these steps:
 
-## TODO:
+### 1. **Backend**: 
+* Activate conda environment
+    ```bash
+    $ conda activate gs_stream
+    ````
 
-### User Stories
-- [ ] Implement 6-DOF controls similar to SIBR viewer 
-  - [x] LH camera translation RH camera rotation
-  - [ ] Create a speed setting in the viewer
-  - [x] Reset to initial position
-- [x] Show closest images from current pose
-- [ ] Allow annotations from either splat or closest images
-- [ ] Control two splats, of the same asset, simultaneously (i.e., before vs after)
-- [ ] Integrate annotation assistance 
-- [ ] Automatic report generation
+* Navigate to the `scripts` folder 
+    ```bash
+    $ cd scripts
+    ````
+    
+* Run the backend code using the following command:
+  ```bash
+  $ ./run_gs_stream_dev.sh
+  ```
 
-### Web Dev
-- [ ] User Authentication
-- [ ] User Access Controls
-- [ ] Need a professional front-end dev. lol
-- [ ] Typescript
-- [ ] Production webserver
+### 2. **Frontend**: 
+* Navigate to the frontend folder
+  ```bash
+  $ cd frontend
+  ``` 
 
-## Implementation Details:
-(Subject to change please see the R24 Project for Latest...)
+* Start the frontend code.
+  ```bash
+  $ npm install
+  $ npm start
+  ``` 
 
-    .
-    ├── ...                         # Original Gaussian Splatting Repo. 
-    ├── data                        # Where raw data & Colmap reconstruction is stored
-    │   ├── project_name
-    │     ├── reconstruction
-    │       ├── sparse
-    │         ├── 0
-    │           ├── cameras.bin
-    │           ├── images.bin
-    │           ├── images.txt
-    │           ├── points3D.bin
-    │       ├── images
-    ├── output                      # Output of training
-    │   ├── project_name
-    │       ├── point_cloud
-    │         ├── iteration_XXXXX
-    │           ├── point_cloud.ply
-    │           ├── config.yaml     # Our file to keep track of where all the info is stored... 
-    ├── static                      # JS and CSS
-    ├── templates                   # HTML Pages
-    ├── camera_pos_utils.py         # Code that supports camera pose calculations
-    ├── render_wrapper.py           # Functions that interact with the Gaussian Splatting Repo.
-    ├── main.py                     # Main Entrypoint (Runs Server)
-    └── README.md
+
+Note: You still need to install the Gaussian Splatting environment (see below).
 
 
 # Original Paper
