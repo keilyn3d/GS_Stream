@@ -7,7 +7,6 @@ import '../../styles/style.css';
 import Title from './MainTitle';
 import EmailInputForm from './EmailInputForm';
 import SsrModelSelector from './SsrModelSelector';
-import WebglModelSelector from './WebglModelSelector';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -110,46 +109,6 @@ const Index = () => {
     }
   };
 
-  const fetchWebglModel = async () => {
-    try {
-      const apiUrl = `${backendAddress}/api/models/splat/rch`;
-      console.log(apiUrl);
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Server response was not ok');
-      }
-      return await response.blob();
-    } catch (error) {
-      console.error('Fetching splat model failed', error);
-      throw error; // Ensure the error is propagated if necessary
-    }
-  };
-
-  const handleWebglModelSubmit = async (event) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const response = await fetchWebglModel();
-      const route = '/webgl/single-view';
-      const state = {
-        userName,
-        response,
-      };
-      console.log('Navigating to:', route);
-      navigate(route, { state });
-    } catch (error) {
-      console.error('Error handling submit', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div>
       <Title />
@@ -167,11 +126,6 @@ const Index = () => {
           allModels={allModels}
           handleSubmit={handleSsrModelSubmit}
         />
-      </div>
-      <div className="divider"></div>
-      <div className="section">
-        <h2>WebGL Rendering Model Selector</h2>
-        <WebglModelSelector handleSubmit={handleWebglModelSubmit} />
       </div>
       <div className="divider"></div>
     </div>
