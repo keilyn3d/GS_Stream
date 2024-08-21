@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, send_file, request
+from flask import Blueprint, jsonify, request
 from ..model_config.model_config_fetcher import ModelManager
 
 model_manager = ModelManager()
