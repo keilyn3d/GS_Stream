@@ -280,11 +280,19 @@ class ImagesMeta:
 
         return filtered_files
 
-    def get_pose_by_filename(self, filename):
+    def get_pose_by_filename(self, filename, colmap=False):
+        """
+        :param filename: filename of the image
+        :param colmap: boolean flag to indicate whether to return in original colmap convention (i.e., T_w_c)
+        """
         idx = self.files.index(filename)
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
-        R = np.linalg.inv(R)
-        return compose_44(R, self.cam_centers[idx])
+        if colmap:
+            t = self.t_vec[idx]
+        else:
+            R = np.linalg.inv(R)
+            t = self.cam_centers[idx]
+        return compose_44(R, t)
 
     def qvec2rotmat(self, qvec):
         return np.array(
