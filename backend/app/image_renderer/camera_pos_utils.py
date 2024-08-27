@@ -225,14 +225,24 @@ def check_occlusion(pts3d_w, depth, K, R_w_c, t_w_c, w, h, occlusion_tol=0):
 
 
 class ImagesMeta:
-    def __init__(self, file):
+    def __init__(self, images_txt_file, cameras_txt_file):
         self.img_id = []
         self.files = []
         self.t_vec = []
         self.q_vec = []
+        self.camera_id = []
         self.cam_centers = []
+        self.cameras_params = {}
 
-        with open(file, 'r') as f:
+        with open(cameras_txt_file, 'r') as f:
+            for count, line in enumerate(f, start=0):
+                if count < 3:
+                    pass
+            else:
+                str_parsed = line.split()
+                self.cameras_params[str_parsed[0]] = [str_parsed[1], int(str_parsed[2]), int(str_parsed[3]), np.array(tuple(map(float, str_parsed[4:])))]
+
+        with open(images_txt_file, 'r') as f:
             for count, line in enumerate(f, start=0):
                 if count < 4:
                     pass
@@ -244,6 +254,7 @@ class ImagesMeta:
                         q_raw = np.array(str_parsed[1:5], dtype=np.float32)
                         R_raw = self.qvec2rotmat(q_raw)
                         t_raw = np.array(str_parsed[5:8], dtype=np.float32)
+                        self.camera_id.append(int(str_parsed[8]))
                         cam_center = (-R_raw.T @ t_raw)
                         self.q_vec.append(q_raw)
                         self.t_vec.append(t_raw)
@@ -420,5 +431,5 @@ if __name__ == '__main__':
                       [-0.68636268, 0.42995355, -0.58655453]])
     T_vec = np.array([-0.32326042, -3.65895232, 2.27446875])
     init_pose = compose_44(R_mat, T_vec)
-    imagelocs = ImagesMeta("/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/sparse/0/images.txt")
+    imagelocs = ImagesMeta("/home/cviss/PycharmProjects/GS_Stream/data/UW_Health_Tower/reconstruction/sparse/0/images.txt", "/home/cviss/PycharmProjects/GS_Stream/data/UW_Health_Tower/reconstruction/sparse/0/cameras.txt")
     print(imagelocs.get_closest_n(init_pose))
