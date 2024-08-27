@@ -254,7 +254,7 @@ class ImagesMeta:
                         q_raw = np.array(str_parsed[1:5], dtype=np.float32)
                         R_raw = self.qvec2rotmat(q_raw)
                         t_raw = np.array(str_parsed[5:8], dtype=np.float32)
-                        self.camera_id.append(int(str_parsed[8]))
+                        self.camera_id.append(str_parsed[8])
                         cam_center = (-R_raw.T @ t_raw)
                         self.q_vec.append(q_raw)
                         self.t_vec.append(t_raw)
@@ -295,6 +295,7 @@ class ImagesMeta:
         """
         :param filename: filename of the image
         :param colmap: boolean flag to indicate whether to return in original colmap convention (i.e., T_w_c)
+        :return: 4x4 Transformation matrix
         """
         idx = self.files.index(filename)
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
@@ -304,6 +305,28 @@ class ImagesMeta:
             R = np.linalg.inv(R)
             t = self.cam_centers[idx]
         return compose_44(R, t)
+
+    def get_intrinsic_by_filename(self, filename):
+        """
+        :param filename: filename of the image
+        :return: intrinsic matrix (K), width (px), height (px)
+        """
+        idx = self.files.index(filename)
+        cam_params = self.cameras_params[self.camera_id[idx]]
+        k = np.zeros((3, 3))
+        if cam_params[0] == "SIMPLE_PINHOLE":
+            k[0, 0] = cam_params[3][0]
+            k[1, 1] = cam_params[3][0]
+            k[0, 2] = cam_params[3][1]
+            k[1, 2] = cam_params[3][2]
+        elif cam_params[0] == "PINHOLE":
+            k[0, 0] = cam_params[3][0]
+            k[1, 1] = cam_params[3][1]
+            k[0, 2] = cam_params[3][2]
+            k[1, 2] = cam_params[3][3]
+        else:
+            raise NotImplementedError
+        return k, cam_params[1], cam_params[2]
 
     def qvec2rotmat(self, qvec):
         return np.array(
@@ -433,3 +456,4 @@ if __name__ == '__main__':
     init_pose = compose_44(R_mat, T_vec)
     imagelocs = ImagesMeta("/home/cviss/PycharmProjects/GS_Stream/data/UW_Health_Tower/reconstruction/sparse/0/images.txt", "/home/cviss/PycharmProjects/GS_Stream/data/UW_Health_Tower/reconstruction/sparse/0/cameras.txt")
     print(imagelocs.get_closest_n(init_pose))
+    print(imagelocs.get_intrinsic_by_filename("DJI_0002.JPG"))
