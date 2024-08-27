@@ -229,6 +229,7 @@ def main_dji(args):
         data = {
             "ply_path": path.abspath(args.ply_path),
             "images_txt_path": path.abspath(args.images_txt_path),
+            "cameras_txt_path": path.abspath(args.cameras_txt_path),
             "images_dir": path.abspath(args.images_dir),
             "images_dir_thumbnails": path.abspath(args.images_dir_thumbnails),
             "alt_and_heading": {
@@ -253,6 +254,8 @@ if __name__ == '__main__':
                         default="../output/RCH/splat/iteration_30000/cropped.ply")
     parser.add_argument('-img_txt', '--images_txt_path', type=str, help="path to images.txt file",
                         default="../output/RCH/sparse/0/images.txt")
+    parser.add_argument('-cams_txt', '--cameras_txt_path', type=str, help="path to cameras.txt file",
+                        default="../output/RCH/sparse/0/cameras.txt")
     parser.add_argument('-img_dir', '--images_dir', type=str, help="path of images folder",
                         default="../output/RCH/images")
     parser.add_argument('-img_dir_thumb', "--images_dir_thumbnails", type=str,

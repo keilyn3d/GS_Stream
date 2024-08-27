@@ -7,7 +7,7 @@ import torchvision
 
 from gaussian_renderer import GaussianModel, render
 from utils.graphics_utils import getProjectionMatrix, getWorld2View2
-from .camera_pos_utils import ImagesMeta, compose_44, decompose_44, pt_2_plane_dist, r_2_yaw
+from backend.app.image_renderer.camera_pos_utils import ImagesMeta, compose_44, decompose_44, pt_2_plane_dist, r_2_yaw
 
 class DummyPipeline:
     convert_SHs_python = False
@@ -63,8 +63,8 @@ class GS_Model():
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
 
-        if config["images_txt_path"] is not None:
-            self.images = ImagesMeta(config["images_txt_path"])
+        if config["images_txt_path"] is not None and config["cameras_txt_path"] is not None:
+            self.images = ImagesMeta(config["images_txt_path"], config["cameras_txt_path"])
             self.images_files = config["images_dir"]
             self.images_thumbnails = config["images_dir_thumbnails"]
 
@@ -158,7 +158,7 @@ class GS_Model():
 if __name__ == '__main__':
     from backend.app.model_config.model_config_fetcher import model_manager
     
-    model_id = "101" # You can change this to any model id. This is just for testing purposes
+    model_id = "103" # You can change this to any model id. This is just for testing purposes
     model_manager.set_model(model_id)
     model = model_manager.get_model(model_id)
     
