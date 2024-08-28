@@ -4,6 +4,7 @@ import yaml
 import numpy as np
 import torch
 import torchvision
+import gzip
 
 from gaussian_renderer import GaussianModel, render
 from utils.graphics_utils import getProjectionMatrix, getWorld2View2
@@ -59,6 +60,7 @@ class GS_Model():
         self.images = None
         self._R_mat = np.array(eval(R_mat))
         self._T_vec = np.array(eval(T_vec))
+        self._depth_avail = False
 
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -67,6 +69,10 @@ class GS_Model():
             self.images = ImagesMeta(config["images_txt_path"], config["cameras_txt_path"])
             self.images_files = config["images_dir"]
             self.images_thumbnails = config["images_dir_thumbnails"]
+
+        if config["depth_dir"] != "NA":
+            self.depth_files = config["depth_dir"]
+            self._depth_avail = True
 
         self.p1 = np.array(config["alt_and_heading"]["gnd_points"]["p1"])
         self.v1 = np.array(config["alt_and_heading"]["gnd_vectors"]["v1"])
