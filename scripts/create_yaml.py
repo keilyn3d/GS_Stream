@@ -140,7 +140,7 @@ class ImagesMeta:
     def get_pose_by_filename(self, filename):
         idx = self.files.index(filename)
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
-        R = np.linalg.inv(R)
+        #R = np.linalg.inv(R)
         return compose_44(R, self.t_vec[idx])
 
 
@@ -183,8 +183,8 @@ def main_dji(args):
             elev.append(get_dji_meta(path.join(args.images_dir, image))["RelativeAltitude"])
             yaw.append(get_dji_meta(path.join(args.images_dir, image))["GimbalYawDegree"])  # assume this is real
             R, T = decompose_44(imagesMeta.get_pose_by_filename(image))
-            z_vec = R[:, -1]
-            C = np.matmul(-R, T)  # The imagesMeta returns the inv(R) so C = -inv(R)*T in our case its just -R*T
+            z_vec = R.T[:, -1]
+            C = np.matmul(-R.T, T)
             plane_dist.append(pt_2_plane_dist(C, p1, cp))
             r_yaw.append(r_2_yaw(z_vec, v1, cp))
 

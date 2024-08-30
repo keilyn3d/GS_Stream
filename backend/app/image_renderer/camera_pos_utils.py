@@ -271,7 +271,7 @@ class ImagesMeta:
         """
         R, t = decompose_44(pose)
 
-        t = np.matmul(-R, t)
+        t = np.matmul(-R.T, t)
 
         #R = Rotation.from_matrix(R)
         #R = R.as_quat()[[3, 0, 1, 2]]  # Change from x,y,z,w to w,x,y,z

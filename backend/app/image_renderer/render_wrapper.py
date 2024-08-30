@@ -7,7 +7,7 @@ import torchvision
 import gzip
 
 from gaussian_renderer import GaussianModel, render
-from utils.graphics_utils import getProjectionMatrix, getWorld2View2
+from utils.graphics_utils import getProjectionMatrix, focal2fov
 from backend.app.image_renderer.camera_pos_utils import ImagesMeta, compose_44, decompose_44, pt_2_plane_dist, r_2_yaw
 
 class DummyPipeline:
@@ -23,12 +23,13 @@ class DummyCamera:
         self.R = R
         self.T = T
 
-        world2View2 = getWorld2View2(self.R, self.T, np.array([0, 0, 0]), 1.0)
+        #world2View2 = getWorld2View2(self.R, self.T, np.array([0, 0, 0]), 1.0
+        #world2View2 = getWorld2View(self.R, self.T)
+        world2View = np.float32(compose_44(R, T))
+        world2View = C2C_Rot @ world2View
+        world2View = C2C_T @ world2View
 
-        world2View2 = C2C_Rot @ world2View2
-        world2View2 = C2C_T @ world2View2
-
-        self.world_view_transform = torch.tensor(world2View2).transpose(0, 1).cuda()
+        self.world_view_transform = torch.tensor(world2View).transpose(0, 1).cuda()
         self.full_proj_transform = (
             self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.camera_center = self.world_view_transform.inverse()[3, :3]
@@ -50,7 +51,7 @@ class DummyCamera:
         """
         world_view_transform = self.world_view_transform.cpu()
         pose = np.eye(4, dtype=np.float32)
-        pose[0:3, 0:3] = world_view_transform[0:3, 0:3]
+        pose[0:3, 0:3] = np.transpose(world_view_transform[0:3, 0:3])
         pose[:3, 3] = np.transpose(world_view_transform[3, :3])
         return pose
 
@@ -98,8 +99,8 @@ class GS_Model():
             altitude = "NA"
             heading = "NA"
         else:
-            z_vec = R[:, -1]
-            C = np.matmul(-R, T)  # The imagesMeta returns the inv(R) so C = -inv(R)*T in our case its just -R*T
+            z_vec = R.T[:, -1]
+            C = np.matmul(-R.T, T)
             altitude = self.alt_slope * pt_2_plane_dist(C, self.p1, self.n) + self.alt_intercept
             heading = r_2_yaw(z_vec, self.v1, self.n)
             heading = heading + self.heading_offset

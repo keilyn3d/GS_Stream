@@ -1,16 +1,55 @@
-# Gaussian Splatting Streamer
+# Gaussian Splat - Inspection Platform
+An infrastructure inspection solution using Gaussian Splatting.
+## CViSS Lab (cviss.net)
 
-This repository is built on-top of the original "3D Gaussian Splatting for Real-Time Radiance Field Rendering" implementation.
-The objective is to create a simple framework to use Gaussian Splatting to support inspection applications.
+## Overview:
 
-## Requirements:
+This project attempts to provide inspection functionality to user-created gaussian splatting model.
+Some of these features include:
+
+* Retrieval and viewing of nearest images w/ zoom
+* Display altitude and azimuth of camera (if GPS is available)
+* Annotations and measurement
+* Compare two models simultaneously 
+* Routes to add custom AI models as microservices
+* If you have a feature idea please contact! :)
+
+In this project we consider two ways to render a gaussian splatting model:
+1. Server Side Rendering (SSL): We render the image on a GPU server and send it to the client.
+
+Pros: 
+* Can render larger scenes (i.e. more splats) by using GPU to sort splats
+
+Cons:
+* Can be slow depending on connection between client and server
+* High hosting cost
+
+2. Client Side Rendering (CSL): We send the client a .splat file and the user renders it with locally through WebGL or 3JS.
+
+Pros:
+* Low hosting cost
+
+Cons:
+* Smaller scenes (i.e., 8 Million Splat with SH Degree 3)
+
+
+## Data Requirements:
 This viewer can simply run with a .ply file however additional inputs are necessary for the inspection features.
 
-* Gaussian Splat (.ply) *Required
-* images.txt from Colmap (to retrieve the closest images)
-* custom_transforms.txt (to correct )
+See /scripts/create_yaml.py and locate each of the following resources...
+
+Data Requirements:
+* Gaussian Splatting Model (.ply)
+* images.txt from Colmap (to retrieve the closest images) 
+* cameras.txt from Colmap (to load camera models for measurement)
 * /images/***.JPG (to display closest images)
-* Pointcloud/Mesh (to view outside of viewer)
+  * GPS meta-data (ATM only support DJI Meta-Data)
+
+Data Optional:
+* Pre-rendered depth maps (for annotation and measurement)
+  * This can be done with NerfStudio's Splatfacto (raw-depth)
+  * Or we can use the inverse depth output directly from the gaussian renderer
+* Ground points (plane_points.txt) used to create altitude and heading models (v. 1)
 
 ## Entrypoint:
 
@@ -44,11 +83,113 @@ To launch locally, follow these steps:
   $ npm start
   ``` 
 
+# Technical Notes
 
-Note: You still need to install the Gaussian Splatting environment (see below).
+## SSL 
 
+For SSL you will need to use the Gaussian Splatting environment, please see the original repo for installation guidance.
 
-# Original Paper
+Please see the included render_test.py for a simple example.
+
+### Conventions
+I'm still trying to figure this stuff out so please correct me if I make an error...
+
+In this implementation we choose to store the pose state as OpenCV ($T_w^c$).
+This allows one to easily specify a desired viewing angle by directly using colmap outputs.
+
+#### Camera Model Conventions
+In this project we have OpenCV (Colmap) and OpenGL (Gaussian Splat) camera conventions...
+
+Currently, this gaussian splatting repo only supports SIMPLE_PINHOLE and PINHOLE camera models.
+The camera model is described by the intrinsic matrix ($K$: 3x3 for HZ Pinhole), this can be found in cameras.txt from Colmap.
+
+In graphics (gaussian splatting), the equivalent is the OpenGL Perspective Matrix (4x4).
+
+You can between the two using ./utils/graphic_utils.py getProjectionMatrix focal2fov.
+Where getProjectionMatrix takes FOVx FOVy, which can be found using focal2fov. 
+(NOTE: this implementation considers Cx and Cy to be exactly 1/2 of W and H and Z-down convention see: [Detail Explaination](https://strawlab.org/2011/11/05/augmented-reality-with-OpenGL/)
+
+#### Camera Position Conventions
+
+When describing the 6-DOF pose of the camera OpenGL and OpenCV also have some differences...
+
+[COLMAP Pose](https://colmap.github.io/format.html):
+
+In images.txt you can find the pose of each image as quaternions (QW, QX, QY, QZ) and translation vector (TX, TY, TZ).
+You can convert the quaternions to matrix using either scipy or qvec2rotmat function from Colmap model loader.
+``` python
+from scipy.spatial.transform import Rotation
+
+R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
+
+# or
+
+def qvec2rotmat(self, qvec):
+... 
+```
+
+Loading the colmap poses you get R_w_c and t_w_c or $T_w^c = [R_w^c | t_w^c]$ (i.e., world to camera transform).
+The world to camera transformation matrix converts 3d points in world frame to 3d points of the camera frame,
+which is pretty useful for SfM.
+
+However, sometimes we need to know what is the camera center in world coordinates or for measurement what the
+3d points are in world coordinates. To do this we need to calculate R_c_w and t_c_w (which is the camera center)...
+
+$R_c^w = (R_w^c)^T$
+
+$cam\_center = t_c^w = (-R_w^c)^T * t_w^c$
+
+[Gaussian Splatting Pose:](https://stackoverflow.com/questions/44375149/opencv-to-opengl-coordinate-system-transform)
+
+The main difference between OpenGL pose is the local camera frame definition and OpenGL uses column major.
+Since the OpenGL Prospective Matrix is Z-down (i.e., similar to OpenCV) we only need to convert the pose from row major to column major.
+This is simply done by transposing the $T_w^c$ matrix.
+
+### Altitude and Heading (v. 1)
+
+The altitude and heading calculations are linear models between images' meta-data (RelativeAltitude, GimbalYawDegree) to model coordinates. 
+
+Since the reconstruction is not necessarily oriented with gravity, we need to specify a ground plane.
+To define this plane you need to specify three points on the ground, these points are saved in plane_points.txt.
+
+These points as p1, p2 and p3 are used to create the vectors on the plane v1 and v2. Such that the unit plane normal
+is the normalized cross product of v1 and v2. 
+
+#### Altitude Model
+
+We try to fit a linear model between images' altitude and the distance between the camera center and ground plane.
+The closest distance between the camera center and ground plane is calculated using pt_2_plane_dist, which is 
+the projection of the vector p1->C on the plane normal. The coefficients of the linear model are fit with LinearRegression (slope, intercept). 
+We calculate $R^2$ as a metric of goodness of fit.
+
+Such that for any camera center (C), the $altitude = slope*C + intercept$
+
+#### Heading Model
+
+The heading model is a linear model, where we find the mean offset (in degrees) between the angel between the camera 
+(camera to world) forward vector and the ground vector v1 and the heading from the image meta-data.
+
+The [OpenCV camera convention](https://stackoverflow.com/questions/17987465/how-is-the-camera-coordinate-system-in-opencv-oriented)
+has the z-vector as heading forwards through the camera center. We call this vector $\hat{z}$, which is the third column
+of the $R_c^w$.
+
+Imagine the plane normal ($\hat{n}$), $\vec{v_1}$ and $\hat{z}$, tail to tail. For convenience imagine there is also
+the vector $\vec{v_3}$, which is perpendicular to both $\hat{n}$ and $\vec{v_1}$...
+To find the angle on the plane between $\hat{z}$ and $\vec{v_1}$ we project $\hat{z}$ on $\vec{v_3}$ and $\vec{v_1}$.
+Then using trignometry and similar triangles the plane angle between $\hat{z}$ and $\vec{v_1}$ can be calculated.
+
+$\vec{v_3} = \hat{n} \times \vec{v_1}$
+
+$\hat{z} \cdot \vec{v_3} = \hat{z} \cdot (\hat{n} \times \vec{v_1}) = det(\hat{z}, \hat{n}, \vec{v_1})$
+
+$plane\_angle = tan(\hat{z} \cdot \vec{v_3}, \hat{z} \cdot \vec{v_1})$
+
+After finding the mean offset angle between the image yaw and plane_angle we find the mean_offset.
+Such that...
+
+$yaw = plane\_angle + mean\_offset$
+
+Note: plane_angle is denoted as r_yaw in implementation
 
 # 3D Gaussian Splatting for Real-Time Radiance Field Rendering (Original README)
 Bernhard Kerbl*, Georgios Kopanas*, Thomas Leimkühler, George Drettakis (* indicates equal contribution)<br>
