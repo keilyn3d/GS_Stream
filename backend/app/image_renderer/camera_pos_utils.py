@@ -225,14 +225,24 @@ def check_occlusion(pts3d_w, depth, K, R_w_c, t_w_c, w, h, occlusion_tol=0):
 
 
 class ImagesMeta:
-    def __init__(self, file):
+    def __init__(self, images_txt_file, cameras_txt_file):
         self.img_id = []
         self.files = []
         self.t_vec = []
         self.q_vec = []
+        self.camera_id = []
         self.cam_centers = []
+        self.cameras_params = {}
 
-        with open(file, 'r') as f:
+        with open(cameras_txt_file, 'r') as f:
+            for count, line in enumerate(f, start=0):
+                if count < 3:
+                    pass
+            else:
+                str_parsed = line.split()
+                self.cameras_params[str_parsed[0]] = [str_parsed[1], int(str_parsed[2]), int(str_parsed[3]), np.array(tuple(map(float, str_parsed[4:])))]
+
+        with open(images_txt_file, 'r') as f:
             for count, line in enumerate(f, start=0):
                 if count < 4:
                     pass
@@ -244,6 +254,7 @@ class ImagesMeta:
                         q_raw = np.array(str_parsed[1:5], dtype=np.float32)
                         R_raw = self.qvec2rotmat(q_raw)
                         t_raw = np.array(str_parsed[5:8], dtype=np.float32)
+                        self.camera_id.append(str_parsed[8])
                         cam_center = (-R_raw.T @ t_raw)
                         self.q_vec.append(q_raw)
                         self.t_vec.append(t_raw)
@@ -260,7 +271,7 @@ class ImagesMeta:
         """
         R, t = decompose_44(pose)
 
-        t = np.matmul(-R, t)
+        t = np.matmul(-R.T, t)
 
         #R = Rotation.from_matrix(R)
         #R = R.as_quat()[[3, 0, 1, 2]]  # Change from x,y,z,w to w,x,y,z
@@ -280,11 +291,42 @@ class ImagesMeta:
 
         return filtered_files
 
-    def get_pose_by_filename(self, filename):
+    def get_pose_by_filename(self, filename, colmap=False):
+        """
+        :param filename: filename of the image
+        :param colmap: boolean flag to indicate whether to return in original colmap convention (i.e., T_w_c)
+        :return: 4x4 Transformation matrix
+        """
         idx = self.files.index(filename)
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
-        R = np.linalg.inv(R)
-        return compose_44(R, self.cam_centers[idx])
+        if colmap:
+            t = self.t_vec[idx]
+        else:
+            R = np.linalg.inv(R)
+            t = self.cam_centers[idx]
+        return compose_44(R, t)
+
+    def get_intrinsic_by_filename(self, filename):
+        """
+        :param filename: filename of the image
+        :return: intrinsic matrix (K), width (px), height (px)
+        """
+        idx = self.files.index(filename)
+        cam_params = self.cameras_params[self.camera_id[idx]]
+        k = np.zeros((3, 3))
+        if cam_params[0] == "SIMPLE_PINHOLE":
+            k[0, 0] = cam_params[3][0]
+            k[1, 1] = cam_params[3][0]
+            k[0, 2] = cam_params[3][1]
+            k[1, 2] = cam_params[3][2]
+        elif cam_params[0] == "PINHOLE":
+            k[0, 0] = cam_params[3][0]
+            k[1, 1] = cam_params[3][1]
+            k[0, 2] = cam_params[3][2]
+            k[1, 2] = cam_params[3][3]
+        else:
+            raise NotImplementedError
+        return k, cam_params[1], cam_params[2]
 
     def qvec2rotmat(self, qvec):
         return np.array(
@@ -412,5 +454,6 @@ if __name__ == '__main__':
                       [-0.68636268, 0.42995355, -0.58655453]])
     T_vec = np.array([-0.32326042, -3.65895232, 2.27446875])
     init_pose = compose_44(R_mat, T_vec)
-    imagelocs = ImagesMeta("/home/cviss/PycharmProjects/GS_Stream/data/UW_tower/sparse/0/images.txt")
+    imagelocs = ImagesMeta("/home/cviss/PycharmProjects/GS_Stream/data/UW_Health_Tower/reconstruction/sparse/0/images.txt", "/home/cviss/PycharmProjects/GS_Stream/data/UW_Health_Tower/reconstruction/sparse/0/cameras.txt")
     print(imagelocs.get_closest_n(init_pose))
+    print(imagelocs.get_intrinsic_by_filename("DJI_0002.JPG"))

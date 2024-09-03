@@ -140,7 +140,7 @@ class ImagesMeta:
     def get_pose_by_filename(self, filename):
         idx = self.files.index(filename)
         R = Rotation.from_quat(self.q_vec[idx][[1, 2, 3, 0]]).as_matrix()
-        R = np.linalg.inv(R)
+        #R = np.linalg.inv(R)
         return compose_44(R, self.t_vec[idx])
 
 
@@ -159,7 +159,6 @@ def create_thumbnails(images_dir: str, thumbnails_dir: str, max_dim: int = 500):
 
 def main_dji(args):
     create_thumbnails(args.images_dir, args.images_dir_thumbnails, 250)
-
     if args.dji:
         points = read_gnd_points(args.plane_points_file)
 
@@ -184,8 +183,8 @@ def main_dji(args):
             elev.append(get_dji_meta(path.join(args.images_dir, image))["RelativeAltitude"])
             yaw.append(get_dji_meta(path.join(args.images_dir, image))["GimbalYawDegree"])  # assume this is real
             R, T = decompose_44(imagesMeta.get_pose_by_filename(image))
-            z_vec = R[:, -1]
-            C = np.matmul(-R, T)  # The imagesMeta returns the inv(R) so C = -inv(R)*T in our case its just -R*T
+            z_vec = R.T[:, -1]
+            C = np.matmul(-R.T, T)
             plane_dist.append(pt_2_plane_dist(C, p1, cp))
             r_yaw.append(r_2_yaw(z_vec, v1, cp))
 
@@ -213,6 +212,7 @@ def main_dji(args):
         data = {
             "ply_path": path.abspath(args.ply_path),
             "images_txt_path": path.abspath(args.images_txt_path),
+            "cameras_txt_path": path.abspath(args.cameras_txt_path),
             "images_dir": path.abspath(args.images_dir),
             "images_dir_thumbnails": path.abspath(args.images_dir_thumbnails),
             "alt_and_heading": {
@@ -229,6 +229,7 @@ def main_dji(args):
         data = {
             "ply_path": path.abspath(args.ply_path),
             "images_txt_path": path.abspath(args.images_txt_path),
+            "cameras_txt_path": path.abspath(args.cameras_txt_path),
             "images_dir": path.abspath(args.images_dir),
             "images_dir_thumbnails": path.abspath(args.images_dir_thumbnails),
             "alt_and_heading": {
@@ -242,6 +243,11 @@ def main_dji(args):
             }
         }
 
+    if args.depth_dir is not None:
+        data["depth_dir"] = path.abspath(args.depth_dir)
+    else:
+        data["depth_dir"] = "NA"
+
     with open(path.join(args.config_path, 'config.yaml'), 'w') as outfile:
         yaml = YAML()
         yaml.default_flow_style = False
@@ -253,13 +259,16 @@ if __name__ == '__main__':
                         default="../output/RCH/splat/iteration_30000/cropped.ply")
     parser.add_argument('-img_txt', '--images_txt_path', type=str, help="path to images.txt file",
                         default="../output/RCH/sparse/0/images.txt")
+    parser.add_argument('-cams_txt', '--cameras_txt_path', type=str, help="path to cameras.txt file",
+                        default="../output/RCH/sparse/0/cameras.txt")
     parser.add_argument('-img_dir', '--images_dir', type=str, help="path of images folder",
                         default="../output/RCH/images")
     parser.add_argument('-img_dir_thumb', "--images_dir_thumbnails", type=str,
                         help="path of thumbnails folder", default="../output/RCH/images_thumbnails")
+    parser.add_argument('-depth_dir', '--depth_dir', type=str, help="path of depth folder", default=None)
     parser.add_argument('-gnd_pts', "--plane_points_file", type=str,
                         help="path to <projectid>_plane_points.txt file", default="../output/RCH/plane_points.txt")
     parser.add_argument('-config_path', "--config_path", type=str, help="path to save config file")
-    parser.add_argument('-dji', "--dji", type=bool, help="Is DJI images?", default=True)
+    parser.add_argument('-dji', "--dji", type=bool, help="Is DJI images?")
     args = parser.parse_args()
     main_dji(args)

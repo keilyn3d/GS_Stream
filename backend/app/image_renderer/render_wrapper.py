@@ -4,10 +4,11 @@ import yaml
 import numpy as np
 import torch
 import torchvision
+import gzip
 
 from gaussian_renderer import GaussianModel, render
-from utils.graphics_utils import getProjectionMatrix, getWorld2View2
-from .camera_pos_utils import ImagesMeta, compose_44, decompose_44, pt_2_plane_dist, r_2_yaw
+from utils.graphics_utils import getProjectionMatrix, focal2fov
+from backend.app.image_renderer.camera_pos_utils import ImagesMeta, compose_44, decompose_44, pt_2_plane_dist, r_2_yaw
 
 class DummyPipeline:
     convert_SHs_python = False
@@ -22,12 +23,13 @@ class DummyCamera:
         self.R = R
         self.T = T
 
-        world2View2 = getWorld2View2(self.R, self.T, np.array([0, 0, 0]), 1.0)
+        #world2View2 = getWorld2View2(self.R, self.T, np.array([0, 0, 0]), 1.0
+        #world2View2 = getWorld2View(self.R, self.T)
+        world2View = np.float32(compose_44(R, T))
+        world2View = C2C_Rot @ world2View
+        world2View = C2C_T @ world2View
 
-        world2View2 = C2C_Rot @ world2View2
-        world2View2 = C2C_T @ world2View2
-
-        self.world_view_transform = torch.tensor(world2View2).transpose(0, 1).cuda()
+        self.world_view_transform = torch.tensor(world2View).transpose(0, 1).cuda()
         self.full_proj_transform = (
             self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.camera_center = self.world_view_transform.inverse()[3, :3]
@@ -49,7 +51,7 @@ class DummyCamera:
         """
         world_view_transform = self.world_view_transform.cpu()
         pose = np.eye(4, dtype=np.float32)
-        pose[0:3, 0:3] = world_view_transform[0:3, 0:3]
+        pose[0:3, 0:3] = np.transpose(world_view_transform[0:3, 0:3])
         pose[:3, 3] = np.transpose(world_view_transform[3, :3])
         return pose
 
@@ -59,14 +61,19 @@ class GS_Model():
         self.images = None
         self._R_mat = np.array(eval(R_mat))
         self._T_vec = np.array(eval(T_vec))
+        self._depth_avail = False
 
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
 
-        if config["images_txt_path"] is not None:
-            self.images = ImagesMeta(config["images_txt_path"])
+        if config["images_txt_path"] is not None and config["cameras_txt_path"] is not None:
+            self.images = ImagesMeta(config["images_txt_path"], config["cameras_txt_path"])
             self.images_files = config["images_dir"]
             self.images_thumbnails = config["images_dir_thumbnails"]
+
+        if config["depth_dir"] != "NA":
+            self.depth_files = config["depth_dir"]
+            self._depth_avail = True
 
         self.p1 = np.array(config["alt_and_heading"]["gnd_points"]["p1"])
         self.v1 = np.array(config["alt_and_heading"]["gnd_vectors"]["v1"])
@@ -92,8 +99,8 @@ class GS_Model():
             altitude = "NA"
             heading = "NA"
         else:
-            z_vec = R[:, -1]
-            C = np.matmul(-R, T)  # The imagesMeta returns the inv(R) so C = -inv(R)*T in our case its just -R*T
+            z_vec = R.T[:, -1]
+            C = np.matmul(-R.T, T)
             altitude = self.alt_slope * pt_2_plane_dist(C, self.p1, self.n) + self.alt_intercept
             heading = r_2_yaw(z_vec, self.v1, self.n)
             heading = heading + self.heading_offset
@@ -158,7 +165,7 @@ class GS_Model():
 if __name__ == '__main__':
     from backend.app.model_config.model_config_fetcher import model_manager
     
-    model_id = "101" # You can change this to any model id. This is just for testing purposes
+    model_id = "103" # You can change this to any model id. This is just for testing purposes
     model_manager.set_model(model_id)
     model = model_manager.get_model(model_id)
     
