@@ -132,14 +132,20 @@ const Index = () => {
     }
   };
 
+  const getWebglModelUrl = (modelId) => {
+    const apiUrl = `${backendCsrAddress}/api/models/splat/${modelId}`;
+    console.log(apiUrl);
+    return apiUrl; // URL을 반환
+  };
+
   const handleWebglModelSubmit = async (modelId) => {
     setIsSubmitting(true);
     try {
-      const response = await fetchWebglModel(modelId);
+      const modelUrl = getWebglModelUrl(modelId); // URL을 통해 모델 데이터를 불러옴
       const route = '/webgl/single-view';
       const state = {
         userName,
-        response,
+        modelUrl,
       };
       console.log('Navigating to:', route);
       navigate(route, { state });
