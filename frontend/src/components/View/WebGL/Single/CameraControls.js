@@ -9,6 +9,7 @@ const CameraControls = ({
   maxPanX,
   maxPanY,
   maxPanZ,
+  setCameraPose,
 }) => {
   useFrame(() => {
     if (orbitControlsRef.current) {
@@ -119,6 +120,21 @@ const CameraControls = ({
 
       // Update controls to apply changes
       controls.update();
+
+      // **Pose 데이터 출력 또는 상태 업데이트**
+      const poseData = {
+        position: camera.position.clone(),
+        rotation: {
+          x: camera.rotation.x,
+          y: camera.rotation.y,
+          z: camera.rotation.z,
+        },
+        targetPosition: controls.target.clone(),
+      };
+      // console.log('Pose Data:', poseData); // 콘솔에 출력
+      if (setCameraPose) {
+        setCameraPose(poseData); // 상태 업데이트 함수 호출 (화면에 표시할 수 있게끔)
+      }
     }
   });
 

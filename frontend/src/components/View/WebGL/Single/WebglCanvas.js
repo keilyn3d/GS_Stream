@@ -16,13 +16,17 @@ const WebglCanvas = ({
 }) => {
   const orbitControlsRef = useRef(null);
   const [keysPressed, setKeysPressed] = useState({});
+  const [cameraPose, setCameraPose] = useState({
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 0, y: 0, z: 0 },
+  });
 
   // // delta와 rotationDelta 상태 관리
   // const [delta, setDelta] = useState(0.5);
   // const [rotationDelta, setRotationDelta] = useState(0.05);
 
   // 카메라의 초기 위치와 타겟 저장
-  const initialCameraPosition = useRef(new THREE.Vector3(0, 0, 10)); // 예시 초기 위치
+  const initialCameraPosition = useRef(new THREE.Vector3(0, 0, 100)); // 예시 초기 위치
   const initialTargetPosition = useRef(new THREE.Vector3(0, 0, 0)); // 예시 초기 타겟
 
   // useEffect(() => {
@@ -34,6 +38,7 @@ const WebglCanvas = ({
 
   useEffect(() => {
     if (handleResetCamera) {
+      console.log('hihihi: handleResetCamera');
       handleResetCamera(() => {
         if (orbitControlsRef.current) {
           const controls = orbitControlsRef.current;
@@ -78,9 +83,9 @@ const WebglCanvas = ({
   // };
 
   const modelPosition = [0, 0, 0];
-  const maxPanX = 50,
-    maxPanY = 50,
-    maxPanZ = 50;
+  const maxPanX = 200,
+    maxPanY = 200,
+    maxPanZ = 200;
 
   const setOrbitControls = (control) => {
     orbitControlsRef.current = control;
@@ -96,11 +101,27 @@ const WebglCanvas = ({
   return (
     <div>
       <KeyDisplay keysPressed={keysPressed} />
+      {/* 카메라 포즈를 출력하는 영역 */}
+      <div>
+        <h3>Camera Pose</h3>
+        <p>
+          Position: x: {cameraPose.position.x.toFixed(2)}, y:{' '}
+          {cameraPose.position.y.toFixed(2)}, z:{' '}
+          {cameraPose.position.z.toFixed(2)}
+        </p>
+        <p>
+          Rotation: x: {cameraPose.rotation.x.toFixed(2)}°, y:{' '}
+          {cameraPose.rotation.y.toFixed(2)}°, z:{' '}
+          {cameraPose.rotation.z.toFixed(2)}°
+        </p>
+      </div>
+
       <Canvas
         style={{ width: '800px', height: '600px' }}
         className="bg-background"
         gl={{ antialias: false }}
         dpr={1}
+        camera={{ position: [0, 0, 3] }}
       >
         {/* <Camera /> */}
         <OrbitControls
@@ -109,8 +130,8 @@ const WebglCanvas = ({
           enableRotate={false} // 회전 제어를 직접 처리하므로 비활성화
           enablePan={false} // 패닝 제어를 직접 처리하므로 비활성화
           target={modelPosition}
-          minDistance={50}
-          maxDistance={200}
+          // minDistance={200}
+          // maxDistance={200}
           minPolarAngle={Math.PI / 6}
           maxPolarAngle={(Math.PI / 2) * 1.5}
           enableDamping={true}
@@ -125,6 +146,7 @@ const WebglCanvas = ({
           maxPanX={maxPanX}
           maxPanY={maxPanY}
           maxPanZ={maxPanZ}
+          setCameraPose={setCameraPose}
         />
         <SplatComponent
           maxSplats={20000000}
