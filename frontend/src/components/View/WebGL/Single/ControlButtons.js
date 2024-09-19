@@ -40,7 +40,7 @@ const ControlButtons = ({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <label>
-          Movement Speed (delta): {delta.toFixed(2)}
+          Movement Speed (delta): {delta.toFixed(1)}
           <input
             type="range"
             min="0.1"
@@ -51,12 +51,12 @@ const ControlButtons = ({
           />
         </label>
         <label>
-          Rotation Speed (rotationDelta): {rotationDelta.toFixed(2)}
+          Rotation Speed (rotationDelta): {rotationDelta.toFixed(1)}
           <input
             type="range"
-            min="0.01"
-            max="0.10"
-            step="0.01"
+            min="0.1"
+            max="1.0"
+            step="0.1"
             value={rotationDelta}
             onChange={handleRotationDeltaChange}
           />
