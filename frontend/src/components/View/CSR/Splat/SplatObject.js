@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { fragmentShaderSource, vertexShaderSource } from './splat-shaders';
+import { fragmentShaderSource, vertexShaderSource } from './SplatShaders';
 // import SplatSortWorker from 'worker-loader!./splat-sort-worker';
-const worker = new Worker(new URL('./splat-sort-worker', import.meta.url));
+const worker = new Worker(new URL('./SplatSortWorker', import.meta.url));
 
 const computeFocalLengths = (width, height, fov, aspect, dpr) => {
   const fovRad = THREE.MathUtils.degToRad(fov);

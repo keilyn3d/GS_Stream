@@ -1,4 +1,3 @@
-// src/components/View/WebGL/Single/keyActions.js
 export const keyActions = {
   KeyQ: 'Move camera down (negative Y-axis)',
   KeyE: 'Move camera up (positive Y-axis)',

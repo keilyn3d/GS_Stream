@@ -1,10 +1,9 @@
-// src/components/View/WebGL/Single/CameraControls.js
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
 import * as THREE from 'three';
 
 const CameraControls = ({
-  controlsRef, // 카메라 참조용
+  controlsRef,
   keysPressed,
   delta,
   rotationDelta,
@@ -15,7 +14,6 @@ const CameraControls = ({
 }) => {
   const { camera } = useThree();
 
-  // 카메라를 controlsRef.current에 할당
   useEffect(() => {
     if (controlsRef) {
       controlsRef.current = camera;
@@ -24,35 +22,35 @@ const CameraControls = ({
   }, [controlsRef, camera]);
 
   useFrame(() => {
-    // **Store previous camera position and quaternion before movement**
+    // Store previous camera position and quaternion before movement
     const prevCameraPosition = camera.position.clone();
     const prevCameraQuaternion = camera.quaternion.clone();
 
-    // **Calculate effective rotation delta based on delta**
+    // Calculate effective rotation delta based on delta
     const effectiveRotationDelta = delta * rotationDelta * 0.1;
 
-    // **카메라 이동 처리 (q, e, a, w, s, d)**
+    // Handle camera movement (q, e, a, w, s, d)
     if (keysPressed['KeyQ']) {
-      camera.translateY(-delta); // 아래로 이동
+      camera.translateY(-delta); // Move Down
     }
     if (keysPressed['KeyE']) {
-      camera.translateY(delta); // 위로 이동
+      camera.translateY(delta); // Move Up
     }
     if (keysPressed['KeyA']) {
-      camera.translateX(-delta); // 왼쪽으로 이동
+      camera.translateX(-delta); // Move Left
     }
     if (keysPressed['KeyD']) {
-      camera.translateX(delta); // 오른쪽으로 이동
+      camera.translateX(delta); // Move Right
     }
     if (keysPressed['KeyW']) {
-      camera.translateZ(-delta); // 앞으로 이동
+      camera.translateZ(-delta); // Move Forward
     }
     if (keysPressed['KeyS']) {
-      camera.translateZ(delta); // 뒤로 이동
+      camera.translateZ(delta); // Move Backward
     }
 
-    // **카메라 회전 처리 (u, o, j, l, k, i)**
-    // 로컬 축을 기준으로 회전하기 위해 현재 카메라의 로컬 축을 계산
+    // Handle camera rotation (u, o, j, l, k, i)
+    // Calculate the local axis for rotation based on the camera's local space
     const localXAxis = new THREE.Vector3(1, 0, 0)
       .applyQuaternion(camera.quaternion)
       .normalize();
@@ -63,7 +61,7 @@ const CameraControls = ({
       .applyQuaternion(camera.quaternion)
       .normalize();
 
-    // **Roll**
+    // Roll
     if (keysPressed['KeyU']) {
       console.log('KeyU pressed - Rolling Left');
       const rollQuaternion = new THREE.Quaternion().setFromAxisAngle(
@@ -81,7 +79,7 @@ const CameraControls = ({
       camera.quaternion.multiplyQuaternions(rollQuaternion, camera.quaternion);
     }
 
-    // **Yaw**
+    // Yaw
     if (keysPressed['KeyJ']) {
       console.log('KeyJ pressed - Yaw Left');
       const yawQuaternion = new THREE.Quaternion().setFromAxisAngle(
@@ -99,7 +97,7 @@ const CameraControls = ({
       camera.quaternion.multiplyQuaternions(yawQuaternion, camera.quaternion);
     }
 
-    // **Pitch**
+    // Pitch
     if (keysPressed['KeyK']) {
       console.log('KeyK pressed - Pitch Up');
       const pitchQuaternion = new THREE.Quaternion().setFromAxisAngle(
@@ -117,10 +115,10 @@ const CameraControls = ({
       camera.quaternion.multiplyQuaternions(pitchQuaternion, camera.quaternion);
     }
 
-    // **Quaternion 정규화**
+    // Normalize quaternion
     camera.quaternion.normalize();
 
-    // **카메라 위치 제한**
+    // Limit camera position
     camera.position.x = THREE.MathUtils.clamp(
       camera.position.x,
       -maxPanX,
@@ -137,7 +135,7 @@ const CameraControls = ({
       maxPanZ,
     );
 
-    // **위치 제한 시 이전 상태로 복구**
+    // Restore previous state if clamped
     const isClamped =
       camera.position.x === -maxPanX ||
       camera.position.x === maxPanX ||
@@ -151,7 +149,7 @@ const CameraControls = ({
       camera.quaternion.copy(prevCameraQuaternion);
     }
 
-    // **Pose 데이터 업데이트**
+    // Update pose data
     const poseData = {
       position: camera.position.clone(),
       rotation: {

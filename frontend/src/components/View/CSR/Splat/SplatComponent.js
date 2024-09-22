@@ -1,4 +1,4 @@
-import { Splat } from './splat-object'; // 상대 경로로 변경
+import { Splat } from './SplatObject';
 
 export function SplatComponent({
   splatUrl,

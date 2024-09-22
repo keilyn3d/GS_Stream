@@ -1,4 +1,3 @@
-// src/components/View/WebGL/Single/ControlButtons.js
 import React from 'react';
 
 const ControlButtons = ({

@@ -1,18 +1,22 @@
-// src/components/View/WebGL/Single/WebglCanvas.js
-import React, { useRef, useState, useEffect } from 'react';
+// src/components/View/CSR/Single/CsrCanvas.js
+import React, { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import CameraControls from './CameraControls';
-import SplatComponent from 'components/SplatComponent';
-import { Environment } from '@react-three/drei'; // OrbitControls 제거
+import SplatComponent from 'components/View/CSR/Splat/SplatComponent';
+import { Environment } from '@react-three/drei';
 import KeyDisplay from './KeyDisplay';
-import * as THREE from 'three';
 
-const WebglCanvas = ({
+const CsrCanvas = ({
   controlsRef,
   delta,
   rotationDelta,
   handleResetCamera,
   splatUrl,
+  modelPosition,
+  maxPanX,
+  maxPanY,
+  maxPanZ,
+  cameraSettings,
 }) => {
   const [keysPressed, setKeysPressed] = useState({});
   const [cameraPose, setCameraPose] = useState({
@@ -27,7 +31,6 @@ const WebglCanvas = ({
   }, [handleResetCamera]);
 
   useEffect(() => {
-    // 키 입력 핸들러
     const handleKeyDown = (event) => {
       setKeysPressed((prevKeys) => ({ ...prevKeys, [event.code]: true }));
     };
@@ -45,15 +48,9 @@ const WebglCanvas = ({
     };
   }, []);
 
-  const modelPosition = [0, 0, 0];
-  const maxPanX = 200,
-    maxPanY = 200,
-    maxPanZ = 200;
-
   return (
     <div>
       <KeyDisplay keysPressed={keysPressed} />
-      {/* 카메라 포즈를 출력하는 영역 */}
       <div>
         <h3>Camera Pose</h3>
         <p>
@@ -73,9 +70,9 @@ const WebglCanvas = ({
         className="bg-background"
         gl={{ antialias: false }}
         dpr={1}
-        camera={{ position: [0, 0, 3], fov: 75, near: 0.1, far: 1000 }} // near와 far 설정
+        camera={cameraSettings}
       >
-        <axesHelper args={[5]} /> {/* 크기 5의 좌표축 표시 */}
+        <axesHelper args={[5]} /> {/* Displays coordinate axes with size 5 */}
         <CameraControls
           controlsRef={controlsRef}
           keysPressed={keysPressed}
@@ -99,4 +96,4 @@ const WebglCanvas = ({
   );
 };
 
-export default WebglCanvas;
+export default CsrCanvas;

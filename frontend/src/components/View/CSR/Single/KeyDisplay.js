@@ -1,4 +1,3 @@
-// src/components/View/WebGL/Single/KeyDisplay.js
 import React from 'react';
 import { keyActions } from './KeyActions';
 
