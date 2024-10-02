@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-globals */
+
 /// <reference lib="WebWorker" />
 
 let maxSplats = Infinity;
