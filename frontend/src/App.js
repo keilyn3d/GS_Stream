@@ -9,7 +9,7 @@ import Index from './components/Main/Index';
 import SingleView from './components/View/SSR/Single/SingleView';
 import DualView from './components/View/SSR/Dual/DualView';
 import CsrSingleView from './components/View/CSR/Single/CsrSingleView';
-import Login from './components/Login';
+import Login from './components/Login/Login';
 
 function App() {
   const [token, setToken] = useState(null);
