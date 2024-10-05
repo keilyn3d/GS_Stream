@@ -10,5 +10,6 @@ data
 run
 .venv
 node_modules/
-.env.development
-
+.env.*
+.DS_Store
+docker-build-*
