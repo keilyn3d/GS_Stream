@@ -99,18 +99,18 @@ const CameraControls = ({
 
     // Pitch
     if (keysPressed['KeyK']) {
-      console.log('KeyK pressed - Pitch Up');
+      console.log('KeyK pressed - Pitch Down');
       const pitchQuaternion = new THREE.Quaternion().setFromAxisAngle(
         localXAxis,
-        effectiveRotationDelta,
+        -effectiveRotationDelta,
       );
       camera.quaternion.multiplyQuaternions(pitchQuaternion, camera.quaternion);
     }
     if (keysPressed['KeyI']) {
-      console.log('KeyI pressed - Pitch Down');
+      console.log('KeyI pressed - Pitch Up');
       const pitchQuaternion = new THREE.Quaternion().setFromAxisAngle(
         localXAxis,
-        -effectiveRotationDelta,
+        effectiveRotationDelta,
       );
       camera.quaternion.multiplyQuaternions(pitchQuaternion, camera.quaternion);
     }
