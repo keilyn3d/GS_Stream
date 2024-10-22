@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-
 import { useNavigate } from 'react-router-dom';
-
+import {
+  Container,
+  Box,
+  Typography,
+  Divider,
+  Card,
+  CardContent,
+  CircularProgress,
+} from '@mui/material';
 import '../../styles/style.css';
-
 import Title from './MainTitle';
-import EmailInputForm from './EmailInputForm';
 import SsrModelSelector from './SsrModelSelector';
 import WebglModelSelector from './WebglModelSelector';
 
@@ -15,7 +20,6 @@ const Index = () => {
   const backendAddress = process.env.REACT_APP_BACKEND_URL;
   const backendCsrAddress = process.env.REACT_APP_CSR_BACKEND_URL;
 
-  const [userName, setUserName] = useState('');
   const [selectedModelId, setSelectedModelId] = useState('');
   const [selectedModelIdForComparison, setSelectedModelIdForComparison] =
     useState('');
@@ -28,31 +32,26 @@ const Index = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (isSubmitting) {
-        // Skip fetch request if isSubmitting is true
         return;
       }
 
       fetch(backendAddress + '/api/model_ids')
         .then((response) => response.json())
         .then((data) => {
-          // Only update state if data has changed
           if (JSON.stringify(data) !== JSON.stringify(allModels)) {
             setAllModels(data);
           }
         })
         .catch((error) => {
           console.error('Fetching data failed', error);
-          // Initialize allModels if fetch request fails
           setAllModels([]);
         });
-    }, 1000); // 1000ms = 1s
+    }, 1000);
 
-    // Clean up function
     return () => {
       clearInterval(intervalId);
     };
-  }, [backendAddress, isSubmitting]);
-  console.log(allModels);
+  }, [backendAddress, isSubmitting, allModels]);
 
   const fetchConfig = async () => {
     try {
@@ -73,7 +72,7 @@ const Index = () => {
       return await response.json();
     } catch (error) {
       console.error('Fetching config failed', error);
-      throw error; // Ensure the error is propagated if necessary
+      throw error;
     }
   };
 
@@ -93,7 +92,6 @@ const Index = () => {
         ? '/dual-view'
         : '/single-view';
       const state = {
-        userName,
         selectedModelId,
         selectedModelName,
         config,
@@ -111,43 +109,26 @@ const Index = () => {
     }
   };
 
-  const fetchWebglModel = async (modelId) => {
-    try {
-      const apiUrl = `${backendCsrAddress}/api/models/splat/${modelId}`;
-      console.log(apiUrl);
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Server response was not ok');
-      }
-      return await response.blob();
-    } catch (error) {
-      console.error('Fetching splat model failed', error);
-      throw error; // Ensure the error is propagated if necessary
-    }
-  };
-
   const getWebglModelUrl = (modelId) => {
-    const apiUrl = `${backendCsrAddress}/api/models/splat/${modelId}`;
-    console.log(apiUrl);
-    return apiUrl; // URL을 반환
+    return `${backendCsrAddress}/api/models/splat/${modelId}`;
   };
 
-  const handleWebglModelSubmit = async (modelId) => {
+  const handleWebglModelSubmit = async (modelId, comparisonModelId = null) => {
     setIsSubmitting(true);
     try {
-      const modelUrl = getWebglModelUrl(modelId); // URL을 통해 모델 데이터를 불러옴
-      const route = '/webgl/single-view';
+      // Process URLs for both models
+      const modelUrl = getWebglModelUrl(modelId); // First model URL
+      const comparisonModelUrl = comparisonModelId
+        ? getWebglModelUrl(comparisonModelId)
+        : null; // Add comparison model URL
+
+      const route = comparisonModelId
+        ? '/webgl/dual-view'
+        : '/webgl/single-view'; // Navigate to a different route if a comparison model exists
       const state = {
-        userName,
         modelUrl,
+        comparisonModelUrl, // Add comparison model URL
       };
-      console.log('Navigating to:', route);
       navigate(route, { state });
     } catch (error) {
       console.error('Error handling submit', error);
@@ -157,30 +138,50 @@ const Index = () => {
   };
 
   return (
-    <div>
-      <Title />
-      <EmailInputForm setUserName={setUserName} />
-      <div className="divider"></div>
-      <div className="section">
-        <h2> Server-Side Rendering(SSR) Model Selector</h2>
-        <SsrModelSelector
-          selectedModelId={selectedModelId}
-          setSelectedModelId={setSelectedModelId}
-          setSelectedModelName={setSelectedModelName}
-          selectedModelIdForComparison={selectedModelIdForComparison}
-          setSelectedModelIdForComparison={setSelectedModelIdForComparison}
-          setSelectedModelNameForComparison={setSelectedModelNameForComparison}
-          allModels={allModels}
-          handleSubmit={handleSsrModelSubmit}
-        />
-      </div>
-      <div className="divider"></div>
-      <div className="section">
-        <h2>WebGL Rendering Model Selector</h2>
-        <WebglModelSelector handleSubmit={handleWebglModelSubmit} />
-      </div>
-      <div className="divider"></div>
-    </div>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      {' '}
+      {/* Overall container style */}
+      <Card sx={{ padding: 4, boxShadow: 3, borderRadius: 2 }}>
+        {' '}
+        {/* Wrap the entire layout with Card for a modern design */}
+        <CardContent>
+          <Title /> {/* Title component */}
+          {/* <EmailInputForm setUserName={setUserName} /> Email input form */}
+          <Divider sx={{ my: 4 }} /> {/* Section divider */}
+          {/* SSR Model Selector section */}
+          <Box className="section" sx={{ mb: 4 }}>
+            <Typography variant="h6" align="center" gutterBottom>
+              Server-Side Rendering Model Selector
+            </Typography>
+            <SsrModelSelector
+              selectedModelId={selectedModelId}
+              setSelectedModelId={setSelectedModelId}
+              setSelectedModelName={setSelectedModelName}
+              selectedModelIdForComparison={selectedModelIdForComparison}
+              setSelectedModelIdForComparison={setSelectedModelIdForComparison}
+              setSelectedModelNameForComparison={
+                setSelectedModelNameForComparison
+              }
+              allModels={allModels}
+              handleSubmit={handleSsrModelSubmit}
+            />
+          </Box>
+          <Divider sx={{ my: 4 }} /> {/* Section divider */}
+          {/* WebGL Model Selector section */}
+          <Box className="section" sx={{ mb: 4 }}>
+            <Typography variant="h6" align="center" gutterBottom>
+              Client-Side Rendering (WebGL) Model Selector
+            </Typography>
+            <WebglModelSelector handleSubmit={handleWebglModelSubmit} />
+          </Box>
+          {isSubmitting && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <CircularProgress /> {/* Display while loading */}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 

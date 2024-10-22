@@ -9,7 +9,7 @@ const Title = () => {
       <span style={{ fontSize: '0.75em', verticalAlign: 'super' }}>
         ™
       </span>{' '}
-      Registration
+      Models
       <ConnectionStatus />
     </h1>
   );

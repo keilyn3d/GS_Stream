@@ -2,6 +2,15 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import * as THREE from 'three';
+import {
+  Container,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Button,
+  Divider,
+} from '@mui/material';
 
 import WelcomeMessage from 'components/View/Common/WelcomeMessage';
 import ViewTitle from 'components/View/Common/ViewTitle';
@@ -37,39 +46,60 @@ const CsrSingleView = () => {
   }, [controlsRef]);
 
   return (
-    <div
-      className="webgl-single-view"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      }}
-    >
-      <ViewTitle />
-      <WelcomeMessage />
-      <CsrCanvas
-        controlsRef={controlsRef}
-        delta={delta}
-        rotationDelta={rotationDelta}
-        handleResetCamera={handleResetCamera}
-        splatUrl={modelUrl}
-        modelPosition={SINGLE_VIEW_SETTINGS.modelPosition}
-        maxPanX={SINGLE_VIEW_SETTINGS.maxPanX}
-        maxPanY={SINGLE_VIEW_SETTINGS.maxPanY}
-        maxPanZ={SINGLE_VIEW_SETTINGS.maxPanZ}
-        cameraSettings={SINGLE_VIEW_SETTINGS.cameraSettings}
-      />
-      <ControlButtons
-        handleResetCamera={handleResetCamera}
-        controlsRef={controlsRef}
-        delta={delta}
-        setDelta={setDelta}
-        rotationDelta={rotationDelta}
-        setRotationDelta={setRotationDelta}
-      />
-    </div>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      {' '}
+      {/* Style for the entire container */}
+      <Card sx={{ padding: 4, boxShadow: 3, borderRadius: 2 }}>
+        {' '}
+        {/* Wrap the entire layout with Card (added for modern design) */}
+        <CardContent>
+          <ViewTitle /> {/* Title component */}
+          <WelcomeMessage /> {/* Welcome message component */}
+          <Divider sx={{ my: 4 }} /> {/* Section divider */}
+          {/* WebGL Canvas section */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              mb: 4,
+            }}
+          >
+            {' '}
+            {/* Box wrapping the WebGL Canvas (style improvement) */}
+            {/* <Typography variant="h6" align="center" gutterBottom>
+              WebGL Single View
+            </Typography> */}
+            <CsrCanvas
+              controlsRef={controlsRef}
+              delta={delta}
+              rotationDelta={rotationDelta}
+              handleResetCamera={handleResetCamera}
+              splatUrl={modelUrl}
+              modelPosition={SINGLE_VIEW_SETTINGS.modelPosition}
+              maxPanX={SINGLE_VIEW_SETTINGS.maxPanX}
+              maxPanY={SINGLE_VIEW_SETTINGS.maxPanY}
+              maxPanZ={SINGLE_VIEW_SETTINGS.maxPanZ}
+              cameraSettings={SINGLE_VIEW_SETTINGS.cameraSettings}
+            />
+          </Box>
+          <Divider sx={{ my: 4 }} /> {/* Section divider */}
+          {/* Control Buttons section */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+            {' '}
+            {/* Box to center align the buttons (style improvement) */}
+            <ControlButtons
+              handleResetCamera={handleResetCamera}
+              controlsRef={controlsRef}
+              delta={delta}
+              setDelta={setDelta}
+              rotationDelta={rotationDelta}
+              setRotationDelta={setRotationDelta}
+            />
+          </Box>
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 
