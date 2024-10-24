@@ -5,16 +5,24 @@ const WebglModelSelector = ({ handleSubmit }) => {
 
   const [splatModels, setSplatModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState('');
+  const [selectedModelForComparison, setSelectedModelForComparison] =
+    useState('');
 
-  const handleChange = (event) => {
+  const handleChange = (setter) => (event) => {
     const modelId = event.target.value;
-    setSelectedModel(modelId);
+    setter(modelId);
   };
 
   const onSubmit = (event) => {
     event.preventDefault();
-    handleSubmit(selectedModel);
-    console.log(selectedModel);
+    if (selectedModelForComparison) {
+      handleSubmit(selectedModel, selectedModelForComparison);
+      console.log('Selected Model:', selectedModel);
+      console.log('Selected Model for Comparison:', selectedModelForComparison);
+    } else {
+      handleSubmit(selectedModel);
+      console.log('Selected Model:', selectedModel);
+    }
   };
 
   useEffect(() => {
@@ -44,7 +52,24 @@ const WebglModelSelector = ({ handleSubmit }) => {
       </p>
       <form onSubmit={onSubmit} className="form-action">
         <div className="selection-container">
-          <select name="model" value={selectedModel} onChange={handleChange}>
+          <select
+            name="model"
+            value={selectedModel}
+            onChange={handleChange(setSelectedModel)}
+          >
+            <option value="">Please select a model</option>
+            {splatModels.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))}
+          </select>
+          <select
+            name="model-for-comparison"
+            value={selectedModelForComparison}
+            onChange={handleChange(setSelectedModelForComparison)}
+            disabled={!selectedModel}
+          >
             <option value="">Please select a model</option>
             {splatModels.map((model) => (
               <option key={model.id} value={model.id}>

@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { fragmentShaderSource, vertexShaderSource } from './SplatShaders';
-// import SplatSortWorker from 'worker-loader!./splat-sort-worker';
-const worker = new Worker(new URL('./SplatSortWorker', import.meta.url));
+
+// Removed global worker import
+// const worker = new Worker(new URL('./SplatSortWorker', import.meta.url));
 
 const computeFocalLengths = (width, height, fov, aspect, dpr) => {
   const fovRad = THREE.MathUtils.degToRad(fov);
@@ -21,8 +22,8 @@ export function Splat({
   // Allow direct access to the mesh
   const ref = useRef(null);
 
-  // Web worker doing the splat sorting
-  // const [worker] = useState(() => new SplatSortWorker());
+  // Create a worker ref
+  const workerRef = useRef(null);
 
   // Listen to screen and viewport
   const {
@@ -61,10 +62,32 @@ export function Splat({
     center: new Float32Array([0, 0, 0, 2, 0, 0]),
   });
 
+  // Create and manage the worker
+  useEffect(() => {
+    // Create a new worker
+    workerRef.current = new Worker(
+      new URL('./SplatSortWorker', import.meta.url),
+    );
+
+    // Receive sorted buffers from sorting worker
+    workerRef.current.onmessage = (e) => {
+      const { quat, scale, center, color } = e.data;
+      setBuffers((buffers) => ({ ...buffers, quat, scale, center, color }));
+    };
+
+    return () => {
+      // Terminate the worker when the component unmounts
+      if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
+    };
+  }, []);
+
   // Send current camera pose to splat sorting worker
   useFrame((state, _delta, _xrFrame) => {
     const mesh = ref.current;
-    if (mesh == null) {
+    if (mesh == null || !workerRef.current) {
       return;
     }
     const camera = state.camera;
@@ -72,18 +95,7 @@ export function Splat({
       .multiply(camera.projectionMatrix)
       .multiply(camera.matrixWorldInverse)
       .multiply(mesh.matrixWorld);
-    worker.postMessage({ view: viewProj.elements, maxSplats });
-  });
-
-  // Receive sorted buffers from sorting worker
-  useEffect(() => {
-    worker.onmessage = (e) => {
-      const { quat, scale, center, color } = e.data;
-      setBuffers((buffers) => ({ ...buffers, quat, scale, center, color }));
-    };
-    return () => {
-      worker.onmessage = null;
-    };
+    workerRef.current.postMessage({ view: viewProj.elements, maxSplats });
   });
 
   // Load splat file from url
@@ -95,7 +107,7 @@ export function Splat({
         credentials: 'omit',
       });
       if (
-        req.status != 200 ||
+        req.status !== 200 ||
         req.body == null ||
         req.headers == null ||
         req.headers.get('content-length') == null
@@ -118,19 +130,32 @@ export function Splat({
         splatData.set(value, bytesRead);
         bytesRead += value.length;
 
+        vertexCount = Math.floor(bytesRead / rowLength);
+        const alignedBytesRead = vertexCount * rowLength;
+
         if (vertexCount > lastVertexCount) {
-          worker.postMessage({
-            buffer: splatData.buffer,
-            vertexCount: Math.floor(bytesRead / rowLength),
-          });
+          if (workerRef.current) {
+            workerRef.current.postMessage(
+              {
+                buffer: splatData.buffer.slice(0, alignedBytesRead),
+                vertexCount,
+              },
+              [splatData.buffer.slice(0, alignedBytesRead)],
+            );
+          }
           lastVertexCount = vertexCount;
         }
       }
-      if (!stopLoading) {
-        worker.postMessage({
-          buffer: splatData.buffer,
-          vertexCount: Math.floor(bytesRead / rowLength),
-        });
+      if (!stopLoading && workerRef.current) {
+        vertexCount = Math.floor(bytesRead / rowLength);
+        const alignedBytesRead = vertexCount * rowLength;
+        workerRef.current.postMessage(
+          {
+            buffer: splatData.buffer.slice(0, alignedBytesRead),
+            vertexCount,
+          },
+          [splatData.buffer.slice(0, alignedBytesRead)],
+        );
       }
     };
     loadModel();
