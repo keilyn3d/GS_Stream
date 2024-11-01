@@ -1,10 +1,12 @@
 // src/components/View/CSR/Single/CsrCanvas.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import CameraControls from './CameraControls';
 import SplatComponent from 'components/View/CSR/Splat/SplatComponent';
 import { Environment } from '@react-three/drei';
 import KeyDisplay from './KeyDisplay';
+import ClickMarkerControl from '../CommonCSR/ClickMarkerControl';
+import MarkerComponent from './MarkerComponent';
 
 const CsrCanvas = ({
   controlsRef,
@@ -17,6 +19,10 @@ const CsrCanvas = ({
   maxPanY,
   maxPanZ,
   cameraSettings,
+  markers,
+  setMarkers,
+  handleUpdateMarker,
+  handleDeleteMarker,
 }) => {
   const [keysPressed, setKeysPressed] = useState({});
   const [cameraPose, setCameraPose] = useState({
@@ -24,6 +30,7 @@ const CsrCanvas = ({
     rotation: { x: 0, y: 0, z: 0 },
   });
 
+  const splatRef = useRef(null);
   useEffect(() => {
     if (handleResetCamera) {
       handleResetCamera();
@@ -49,7 +56,7 @@ const CsrCanvas = ({
   }, []);
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
       <KeyDisplay keysPressed={keysPressed} />
       <div>
         <h3>Camera Pose</h3>
@@ -64,7 +71,11 @@ const CsrCanvas = ({
           {cameraPose.rotation.z.toFixed(2)}°
         </p>
       </div>
-
+      <MarkerComponent
+        markers={markers}
+        handleUpdateMarker={handleUpdateMarker}
+        handleDeleteMarker={handleDeleteMarker}
+      />
       <Canvas
         style={{ width: '800px', height: '600px' }}
         className="bg-background"
@@ -72,6 +83,11 @@ const CsrCanvas = ({
         dpr={1}
         camera={cameraSettings}
       >
+        <ClickMarkerControl
+          splatRef={splatRef}
+          markers={markers}
+          setMarkers={setMarkers}
+        />
         <axesHelper args={[5]} /> {/* Displays coordinate axes with size 5 */}
         <CameraControls
           controlsRef={controlsRef}
@@ -89,6 +105,8 @@ const CsrCanvas = ({
           splatRot={[Math.PI, 0, 0]}
           splatScale={17.8}
           splatUrl={splatUrl}
+          splatRef={splatRef}
+          frustumCulled={false}
         />
         <Environment preset="city" />
       </Canvas>

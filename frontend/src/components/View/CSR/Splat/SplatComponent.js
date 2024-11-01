@@ -7,6 +7,7 @@ export function SplatComponent({
   splatScale,
   maxSplats,
   splatScaleFactor,
+  splatRef,
 }) {
   return (
     splatUrl && (
@@ -19,6 +20,7 @@ export function SplatComponent({
           splatScaleFactor={splatScaleFactor}
           url={splatUrl}
           maxSplats={maxSplats}
+          splatRef={splatRef}
         />
       </group>
     )

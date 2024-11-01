@@ -33,6 +33,19 @@ const CsrSingleView = () => {
     SINGLE_VIEW_SETTINGS.rotationDelta,
   );
 
+  const [markers, setMarkers] = useState([]);
+  const handleUpdateMarker = (index, newMarker) => {
+    setMarkers((prevMarkers) => {
+      const updatedMarkers = [...prevMarkers];
+      updatedMarkers[index] = newMarker;
+      return updatedMarkers;
+    });
+  };
+
+  const handleDeleteMarker = (index) => {
+    setMarkers((prevMarkers) => prevMarkers.filter((_, i) => i !== index));
+  };
+
   // Pass the resetCamera handler to CsrCanvas
   const handleResetCamera = useCallback(() => {
     console.log('handleResetCamera called');
@@ -81,6 +94,10 @@ const CsrSingleView = () => {
               maxPanY={SINGLE_VIEW_SETTINGS.maxPanY}
               maxPanZ={SINGLE_VIEW_SETTINGS.maxPanZ}
               cameraSettings={SINGLE_VIEW_SETTINGS.cameraSettings}
+              markers={markers}
+              setMarkers={setMarkers}
+              handleUpdateMarker={handleUpdateMarker}
+              handleDeleteMarker={handleDeleteMarker}
             />
           </Box>
           <Divider sx={{ my: 4 }} /> {/* Section divider */}

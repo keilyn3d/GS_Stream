@@ -18,10 +18,12 @@ export function Splat({
   url = 'https://antimatter15.com/splat-data/train.splat',
   maxSplats = Infinity,
   splatScaleFactor = 1,
+  splatRef,
 }) {
   // Allow direct access to the mesh
   const ref = useRef(null);
 
+  splatRef.current = ref.current;
   // Create a worker ref
   const workerRef = useRef(null);
 
@@ -173,7 +175,7 @@ export function Splat({
   const instanceCount = Math.min(buffers.quat.length / 4, maxSplats);
 
   return (
-    <mesh ref={ref} renderOrder={10}>
+    <mesh ref={ref} renderOrder={10} frustumCulled={false}>
       <instancedBufferGeometry
         key={instanceCount}
         instanceCount={instanceCount}
